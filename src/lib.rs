@@ -10,6 +10,7 @@ This is a crate which provides macros `tera_resources_initialize!` and `tera_res
 See `examples`.
 */
 
+mod reloadable;
 mod manager;
 mod fairing;
 mod macros;
@@ -44,8 +45,9 @@ use rocket::fairing::Fairing;
 
 pub use rocket_etag_if_none_match::{EntityTag, EtagIfNoneMatch};
 
-use fairing::TeraResponseFairing;
+pub use reloadable::ReloadableTera;
 pub use manager::TeraContextManager;
+use fairing::TeraResponseFairing;
 
 #[inline]
 fn compute_html_etag(html: &str) -> EntityTag {
@@ -123,7 +125,7 @@ impl TeraResponse {
     #[cfg(debug_assertions)]
     #[inline]
     /// Create the fairing of `TeraResponse`.
-    pub fn fairing<F>(f: F) -> impl Fairing where F: Fn(&mut MutexGuard<Tera>) + Send + Sync + 'static {
+    pub fn fairing<F>(f: F) -> impl Fairing where F: Fn(&mut MutexGuard<ReloadableTera>) + Send + Sync + 'static {
         TeraResponseFairing {
             custom_callback: Box::new(f)
         }

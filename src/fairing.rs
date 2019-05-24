@@ -10,14 +10,20 @@ use crate::rocket::fairing::{Fairing, Info, Kind};
 #[cfg(debug_assertions)]
 use crate::rocket::data::Data;
 
-use crate::{Tera, TeraContextManager};
+#[cfg(debug_assertions)]
+use crate::ReloadableTera;
+
+#[cfg(not(debug_assertions))]
+use crate::Tera;
+
+use crate::TeraContextManager;
 
 const FAIRING_NAME: &'static str = "Tera";
 
 /// The fairing of `TeraResponse`.
 #[cfg(debug_assertions)]
 pub struct TeraResponseFairing {
-    pub(crate) custom_callback: Box<Fn(&mut MutexGuard<Tera>) + Send + Sync + 'static>
+    pub(crate) custom_callback: Box<Fn(&mut MutexGuard<ReloadableTera>) + Send + Sync + 'static>
 }
 
 /// The fairing of `TeraResponse`.
@@ -45,7 +51,7 @@ impl Fairing for TeraResponseFairing {
 
     #[cfg(debug_assertions)]
     fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
-        let tera = Mutex::new(Tera::default());
+        let tera = Mutex::new(ReloadableTera::new());
 
         (self.custom_callback)(&mut tera.lock().unwrap());
 
@@ -69,6 +75,6 @@ impl Fairing for TeraResponseFairing {
     fn on_request(&self, req: &mut Request, _data: &Data) {
         let cm = req.guard::<State<TeraContextManager>>().expect("TeraContextManager registered in on_attach");
 
-        (self.custom_callback)(&mut cm.tera.lock().unwrap());
+        cm.tera.lock().unwrap().reload_if_needed().unwrap();
     }
 }

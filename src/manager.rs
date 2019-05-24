@@ -1,13 +1,19 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use crate::{EntityTag, Tera};
+use crate::{EntityTag};
+
+#[cfg(debug_assertions)]
+use crate::ReloadableTera;
+
+#[cfg(not(debug_assertions))]
+use crate::Tera;
 
 /// To monitor the state of Tera.
 #[cfg(debug_assertions)]
 #[derive(Debug)]
 pub struct TeraContextManager {
-    pub tera: Mutex<Tera>,
+    pub tera: Mutex<ReloadableTera>,
     pub cache_table: Mutex<HashMap<String, (String, EntityTag)>>,
 }
 
@@ -22,7 +28,7 @@ pub struct TeraContextManager {
 impl TeraContextManager {
     #[cfg(debug_assertions)]
     #[inline]
-    pub(crate) fn new(tera: Mutex<Tera>) -> TeraContextManager {
+    pub(crate) fn new(tera: Mutex<ReloadableTera>) -> TeraContextManager {
         TeraContextManager {
             tera,
             cache_table: Mutex::new(HashMap::new()),
