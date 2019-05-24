@@ -39,7 +39,7 @@ fn index_etag(etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
 fn index_2(cm: State<TeraContextManager>) -> TeraResponse {
     tera_response_static!(
         cm,
-        "index2".to_string(),
+        "index2",
         {
             println!("Generate index_2 and staticize it...");
 
@@ -59,7 +59,7 @@ fn index_2_etag(etag_if_none_match: EtagIfNoneMatch, cm: State<TeraContextManage
     tera_response_static!(
         etag_if_none_match,
         cm,
-        "index2etag".to_string(),
+        "index2etag",
         {
             println!("Generate index_2_etag and staticize it...");
 

@@ -84,21 +84,21 @@ macro_rules! tera_response_static {
 macro_rules! tera_response_static {
     ( $cm:expr, $key:expr, $gen:block ) => {
         {
-            let contains = $cm.cache_table.lock().unwrap().contains_key($key.as_str());
+            let contains = $cm.contains_key($key);
 
             if contains {
                 TeraResponse::build_from_cache(
                     EtagIfNoneMatch {
                         etag: None
                     },
-                    $key.as_str()
+                    $key
                 )
             } else {
                 let res = $gen;
 
                 let cache = res.get_html_and_etag(&$cm).unwrap();
 
-                $cm.cache_table.lock().unwrap().insert($key, cache);
+                $cm.insert($key, cache);
 
                 res
             }
@@ -106,19 +106,19 @@ macro_rules! tera_response_static {
     };
     ( $etag_if_none_match:expr, $cm:expr, $key:expr, $gen:block ) => {
         {
-            let contains = $cm.cache_table.lock().unwrap().contains_key($key.as_str());
+            let contains = $cm.contains_key($key);
 
             if contains {
                 TeraResponse::build_from_cache(
                     $etag_if_none_match,
-                    $key.as_str()
+                    $key
                 )
             } else {
                 let res = $gen;
 
                 let cache = res.get_html_and_etag(&$cm).unwrap();
 
-                $cm.cache_table.lock().unwrap().insert($key, cache);
+                $cm.insert($key, cache);
 
                 res
             }

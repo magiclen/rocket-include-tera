@@ -10,7 +10,7 @@ use crate::tera::Error as TeraError;
 /// Reloadable Tera.
 pub struct ReloadableTera {
     tera: Tera,
-    files: HashMap<String, (PathBuf, Option<SystemTime>)>,
+    files: HashMap<&'static str, (PathBuf, Option<SystemTime>)>,
 }
 
 impl ReloadableTera {
@@ -25,11 +25,10 @@ impl ReloadableTera {
 
     #[inline]
     /// Register a template from a path and it can be reloaded automatically.
-    pub fn register_template_file<S: Into<String>, P: Into<PathBuf>>(&mut self, name: S, file_path: P) -> Result<(), TeraError> {
-        let name = name.into();
+    pub fn register_template_file<P: Into<PathBuf>>(&mut self, name: &'static str, file_path: P) -> Result<(), TeraError> {
         let file_path = file_path.into();
 
-        self.tera.add_template_file(&file_path, Some(name.as_str()))?;
+        self.tera.add_template_file(&file_path, Some(name))?;
 
         let metadata = file_path.metadata().unwrap();
 
@@ -42,9 +41,7 @@ impl ReloadableTera {
 
     #[inline]
     /// Unregister a template from a file by a name.
-    pub fn unregister_template_file<S: AsRef<str>>(&mut self, name: S) -> Option<PathBuf> {
-        let name = name.as_ref();
-
+    pub fn unregister_template_file(&mut self, name: &'static str) -> Option<PathBuf> {
         match self.files.remove(name) {
             Some((file_path, _)) => {
                 // TODO Remove template
@@ -87,7 +84,7 @@ impl ReloadableTera {
             };
 
             if reload {
-                self.tera.add_template_file(&file_path, Some(name.as_str()))?;
+                self.tera.add_template_file(&file_path, Some(name))?;
 
                 *mtime = new_mtime;
             }

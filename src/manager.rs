@@ -43,4 +43,16 @@ impl TeraContextManager {
             cache_table: Mutex::new(HashMap::new()),
         }
     }
+
+    #[inline]
+    /// Check if a cache key exists.
+    pub fn contains_key<S: AsRef<str>>(&self, key: S) -> bool {
+        self.cache_table.lock().unwrap().contains_key(key.as_ref())
+    }
+
+    #[inline]
+    /// Insert a cache.
+    pub fn insert<S: Into<String>>(&self, key: S, cache: (String, EntityTag)) -> Option<(String, EntityTag)> {
+        self.cache_table.lock().unwrap().insert(key.into(), cache)
+    }
 }

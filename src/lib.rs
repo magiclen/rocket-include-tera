@@ -75,7 +75,7 @@ enum TeraResponseSource {
     Template {
         etag: Option<EntityTag>,
         minify: bool,
-        name: String,
+        name: &'static str,
         context: Value,
     },
     Cache(Option<String>),
@@ -91,10 +91,8 @@ pub struct TeraResponse {
 impl TeraResponse {
     #[inline]
     /// Build a `TeraResponse` instance from a specific template.
-    pub fn build_from_template<S: Into<String>, V: Serialize>(client_etag: EtagIfNoneMatch, etag: Option<EntityTag>, minify: bool, name: S, context: V) -> Result<TeraResponse, SerdeJsonError> {
+    pub fn build_from_template<V: Serialize>(client_etag: EtagIfNoneMatch, etag: Option<EntityTag>, minify: bool, name: &'static str, context: V) -> Result<TeraResponse, SerdeJsonError> {
         let context = serde_json::to_value(context)?;
-
-        let name = name.into();
 
         let source = TeraResponseSource::Template {
             etag,
