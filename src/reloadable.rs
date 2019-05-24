@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 use crate::Tera;
@@ -25,17 +25,17 @@ impl ReloadableTera {
 
     #[inline]
     /// Register a template from a path and it can be reloaded automatically.
-    pub fn register_template_file<S: Into<String>, P: AsRef<Path>>(&mut self, name: S, file_path: P) -> Result<(), TeraError> {
+    pub fn register_template_file<S: Into<String>, P: Into<PathBuf>>(&mut self, name: S, file_path: P) -> Result<(), TeraError> {
         let name = name.into();
-        let file_path = file_path.as_ref();
+        let file_path = file_path.into();
 
-        self.tera.add_template_file(file_path, Some(name.as_str()))?;
+        self.tera.add_template_file(&file_path, Some(name.as_str()))?;
 
         let metadata = file_path.metadata().unwrap();
 
         let mtime = metadata.modified().ok();
 
-        self.files.insert(name, (file_path.to_path_buf(), mtime));
+        self.files.insert(name, (file_path, mtime));
 
         Ok(())
     }
