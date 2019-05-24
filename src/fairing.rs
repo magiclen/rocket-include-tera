@@ -58,8 +58,6 @@ impl Fairing for TeraResponseFairing {
     fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
         let mut tera = Tera::default();
 
-        tera.add_raw_template()
-
         (self.custom_callback)(&mut tera);
 
         let state = TeraContextManager::new(tera);
