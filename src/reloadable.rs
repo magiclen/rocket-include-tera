@@ -41,7 +41,9 @@ impl ReloadableTera {
 
     #[inline]
     /// Unregister a template from a file by a name.
-    pub fn unregister_template_file(&mut self, name: &'static str) -> Option<PathBuf> {
+    pub fn unregister_template_file<S: AsRef<str>>(&mut self, name: S) -> Option<PathBuf> {
+        let name = name.as_ref();
+
         match self.files.remove(name) {
             Some((file_path, _)) => {
                 // TODO Remove template
