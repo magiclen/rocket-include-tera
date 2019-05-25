@@ -6,7 +6,7 @@ macro_rules! tera_resources_initialize {
         use std::fs;
 
         $(
-            $tera.add_template_file($path, Some($name)).unwrap();
+            $tera.register_template_file($name, $path).unwrap();
         )*
     };
 }
