@@ -50,9 +50,9 @@ pub use manager::TeraContextManager;
 use fairing::TeraResponseFairing;
 
 #[inline]
-fn compute_html_etag(html: &str) -> EntityTag {
+fn compute_html_etag<S: AsRef<str>>(html: S) -> EntityTag {
     let mut crc64ecma = CRC::crc64ecma();
-    crc64ecma.digest(html.as_bytes());
+    crc64ecma.digest(html.as_ref().as_bytes());
     let crc64 = crc64ecma.get_crc();
     EntityTag::new(true, format!("{:X}", crc64))
 }
