@@ -25,6 +25,16 @@ fn index() -> TeraResponse {
     tera_response!("index", &map)
 }
 
+#[get("/disable-minify")]
+fn index_disable_minify() -> TeraResponse {
+    let mut map = HashMap::new();
+
+    map.insert("title", "Title");
+    map.insert("body", "Hello, world!");
+
+    tera_response!(disable_minify "index", &map)
+}
+
 #[get("/etag")]
 fn index_etag(etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
     let mut map = HashMap::new();
@@ -35,9 +45,19 @@ fn index_etag(etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
     tera_response!(etag_if_none_match, "index", &map)
 }
 
+#[get("/etag/disable-minify")]
+fn index_etag_disable_minify(etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
+    let mut map = HashMap::new();
+
+    map.insert("title", "Title");
+    map.insert("body", "Hello, world!");
+
+    tera_response!(etag_if_none_match, disable_minify "index", &map)
+}
+
 #[get("/2")]
 fn index_2(cm: State<TeraContextManager>) -> TeraResponse {
-    tera_response_static!(
+    tera_response_cache!(
         cm,
         "index2",
         {
@@ -56,7 +76,7 @@ fn index_2(cm: State<TeraContextManager>) -> TeraResponse {
 
 #[get("/2/etag")]
 fn index_2_etag(etag_if_none_match: EtagIfNoneMatch, cm: State<TeraContextManager>) -> TeraResponse {
-    tera_response_static!(
+    tera_response_cache!(
         etag_if_none_match,
         cm,
         "index2etag",
@@ -83,7 +103,7 @@ fn main() {
                 "index2", "examples/views/index2.tera"
             );
         }))
-        .mount("/", routes![index, index_etag])
+        .mount("/", routes![index, index_etag, index_disable_minify, index_etag_disable_minify])
         .mount("/", routes![index_2, index_2_etag])
         .launch();
 }

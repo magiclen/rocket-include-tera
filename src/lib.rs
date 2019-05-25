@@ -3,9 +3,9 @@
 
 This is a crate which provides macros `tera_resources_initialize!` and `tera_response!` to statically include Tera files from your Rust project and make them be the HTTP response sources quickly.
 
-* `tera_resources_initialize!` is used for including Tera files into your executable binary file. You need to specify each file's name and its path. For instance, the above example uses **index** to represent the file **included-tera/index.tera** and **index-2** to represent the file **included-tera/index2.tera**. A name cannot be repeating. In order to reduce the compilation time and allow to hot-reload templates, files are compiled into your executable binary file together, only when you are using the **release** profile.
-* `tera_response!` is used for retrieving and rendering the file you input through the macro `tera_resources_initialize!` as a `TeraResponse` instance with rendered HTML. When its `respond_to` method is called, three HTTP headers, **Content-Type**, **Content-Length** and **Etag**, will be automatically added, and the rendered HTML can optionally be minified.
-* `tera_response_static!` is used for in-memory staticizing a `TeraResponse` instance by a given key. It is effective only when you are using the **release** profile.
+* `tera_resources_initialize!` is used in the fairing of `TeraResponseFairing` to include Tera files into your executable binary file. You need to specify each file's name and its path. In order to reduce the compilation time and allow to hot-reload templates, files are compiled into your executable binary file together, only when you are using the **release** profile.
+* `tera_response!` is used for retrieving and rendering the file you input through the macro `tera_resources_initialize!` as a `TeraResponse` instance with rendered HTML. When its `respond_to` method is called, three HTTP headers, **Content-Type**, **Content-Length** and **Etag**, will be automatically added, and the rendered HTML can optionally not be minified.
+* `tera_response_cache!` is used for wrapping a `TeraResponse` and its constructor, and use a **key** to cache its HTML and ETag in memory. The cache is generated only when you are using the **release** profile.
 
 See `examples`.
 */
@@ -73,7 +73,6 @@ fn build_context(value: &Value) -> Context {
 #[derive(Debug)]
 enum TeraResponseSource {
     Template {
-        etag: Option<EntityTag>,
         minify: bool,
         name: &'static str,
         context: Value,
@@ -91,11 +90,10 @@ pub struct TeraResponse {
 impl TeraResponse {
     #[inline]
     /// Build a `TeraResponse` instance from a specific template.
-    pub fn build_from_template<V: Serialize>(client_etag: EtagIfNoneMatch, etag: Option<EntityTag>, minify: bool, name: &'static str, context: V) -> Result<TeraResponse, SerdeJsonError> {
+    pub fn build_from_template<V: Serialize>(client_etag: EtagIfNoneMatch, minify: bool, name: &'static str, context: V) -> Result<TeraResponse, SerdeJsonError> {
         let context = serde_json::to_value(context)?;
 
         let source = TeraResponseSource::Template {
-            etag,
             minify,
             name,
             context,
@@ -108,7 +106,7 @@ impl TeraResponse {
     }
 
     #[inline]
-    /// Build a `TeraResponse` instance from static cache.
+    /// Build a `TeraResponse` instance from cache.
     pub fn build_from_cache<S: Into<String>>(client_etag: EtagIfNoneMatch, name: S) -> TeraResponse {
         let source = TeraResponseSource::Cache(name.into());
 
@@ -241,12 +239,13 @@ impl<'a> Responder<'a> for TeraResponse {
 
         match &self.source {
             TeraResponseSource::Template {
-                etag,
                 minify,
                 ..
             } => {
-                let (html, etag) = match etag {
-                    Some(etag) => {
+                let (html, etag) = match self.render(&cm) {
+                    Ok(html) => {
+                        let etag = compute_html_etag(&html);
+
                         let is_etag_match = self.client_etag.weak_eq(&etag);
 
                         if is_etag_match {
@@ -254,37 +253,13 @@ impl<'a> Responder<'a> for TeraResponse {
 
                             return response.ok();
                         } else {
-                            match self.render(&cm) {
-                                Ok(html) => (html, etag.to_string()),
-                                Err(_) => {
-                                    response.status(Status::InternalServerError);
-
-                                    return response.ok();
-                                }
-                            }
+                            (html, etag.to_string())
                         }
                     }
-                    None => {
-                        match self.render(&cm) {
-                            Ok(html) => {
-                                let etag = compute_html_etag(&html);
+                    Err(_) => {
+                        response.status(Status::InternalServerError);
 
-                                let is_etag_match = self.client_etag.weak_eq(&etag);
-
-                                if is_etag_match {
-                                    response.status(Status::NotModified);
-
-                                    return response.ok();
-                                } else {
-                                    (html, etag.to_string())
-                                }
-                            }
-                            Err(_) => {
-                                response.status(Status::InternalServerError);
-
-                                return response.ok();
-                            }
-                        }
+                        return response.ok();
                     }
                 };
 
