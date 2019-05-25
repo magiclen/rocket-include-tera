@@ -30,7 +30,7 @@ impl ReloadableTera {
 
         self.tera.add_template_file(&file_path, Some(name))?;
 
-        let metadata = file_path.metadata().unwrap();
+        let metadata = file_path.metadata().map_err(|err| TeraError::msg(err.to_string()))?;
 
         let mtime = metadata.modified().ok();
 
