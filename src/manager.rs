@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use crate::{EntityTag};
 
@@ -14,7 +14,7 @@ use crate::Tera;
 #[derive(Debug)]
 pub struct TeraContextManager {
     pub tera: Mutex<ReloadableTera>,
-    pub cache_table: Mutex<HashMap<String, (String, EntityTag)>>,
+    pub cache_table: Mutex<HashMap<Arc<str>, (Arc<str>, Arc<EntityTag>)>>,
 }
 
 /// To monitor the state of Tera.
@@ -22,7 +22,7 @@ pub struct TeraContextManager {
 #[derive(Debug)]
 pub struct TeraContextManager {
     pub tera: Tera,
-    pub cache_table: Mutex<HashMap<String, (String, EntityTag)>>,
+    pub cache_table: Mutex<HashMap<Arc<str>, (Arc<str>, Arc<EntityTag>)>>,
 }
 
 impl TeraContextManager {
@@ -52,7 +52,7 @@ impl TeraContextManager {
 
     #[inline]
     /// Insert a cache.
-    pub fn insert<S: Into<String>>(&self, key: S, cache: (String, EntityTag)) -> Option<(String, EntityTag)> {
+    pub fn insert<S: Into<Arc<str>>>(&self, key: S, cache: (Arc<str>, Arc<EntityTag>)) -> Option<(Arc<str>, Arc<EntityTag>)> {
         self.cache_table.lock().unwrap().insert(key.into(), cache)
     }
 }

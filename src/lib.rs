@@ -19,6 +19,7 @@ pub extern crate tera;
 
 extern crate crc_any;
 extern crate html_minifier;
+extern crate rc_u8_reader;
 
 extern crate serde;
 
@@ -31,8 +32,10 @@ extern crate rocket_etag_if_none_match;
 use std::io::Cursor;
 #[cfg(debug_assertions)]
 use std::sync::MutexGuard;
+use std::sync::Arc;
 
 use crc_any::CRC;
+use rc_u8_reader::ArcU8Reader;
 use tera::{Tera, Context, Error as TeraError};
 use serde::Serialize;
 use serde_json::{Value, Error as SerdeJsonError};
@@ -77,7 +80,7 @@ enum TeraResponseSource {
         name: &'static str,
         context: Value,
     },
-    Cache(String),
+    Cache(Arc<str>),
 }
 
 #[derive(Debug)]
@@ -107,7 +110,7 @@ impl TeraResponse {
 
     #[inline]
     /// Build a `TeraResponse` instance from cache.
-    pub fn build_from_cache<S: Into<String>>(client_etag: EtagIfNoneMatch, name: S) -> TeraResponse {
+    pub fn build_from_cache<S: Into<Arc<str>>>(client_etag: EtagIfNoneMatch, name: S) -> TeraResponse {
         let source = TeraResponseSource::Cache(name.into());
 
         TeraResponse {
@@ -175,7 +178,7 @@ impl TeraResponse {
     #[cfg(debug_assertions)]
     #[inline]
     /// Get this response's HTML and Etag.
-    pub fn get_html_and_etag(&self, cm: &TeraContextManager) -> Result<(String, EntityTag), TeraError> {
+    pub fn get_html_and_etag(&self, cm: &TeraContextManager) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
         match &self.source {
             TeraResponseSource::Template {
                 name,
@@ -188,7 +191,7 @@ impl TeraResponse {
 
                 let etag = compute_html_etag(&html);
 
-                Ok((html, etag))
+                Ok((html.into(), Arc::new(etag)))
             }
             TeraResponseSource::Cache(name) => {
                 let cache_table = cm.cache_table.lock().unwrap();
@@ -204,7 +207,7 @@ impl TeraResponse {
     #[cfg(not(debug_assertions))]
     #[inline]
     /// Get this response's HTML and Etag.
-    pub fn get_html_and_etag(&self, cm: &TeraContextManager) -> Result<(String, EntityTag), TeraError> {
+    pub fn get_html_and_etag(&self, cm: &TeraContextManager) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
         match &self.source {
             TeraResponseSource::Template {
                 name,
@@ -217,7 +220,7 @@ impl TeraResponse {
 
                 let etag = compute_html_etag(&html);
 
-                Ok((html, etag))
+                Ok((html.into(), Arc::new(etag)))
             }
             TeraResponseSource::Cache(name) => {
                 let cache_table = cm.cache_table.lock().unwrap();
@@ -301,7 +304,7 @@ impl<'a> Responder<'a> for TeraResponse {
                 response
                     .raw_header("ETag", etag)
                     .raw_header("Content-Type", "text/html; charset=utf-8")
-                    .sized_body(Cursor::new(html));
+                    .sized_body(ArcU8Reader::new(html));
             }
         }
 
