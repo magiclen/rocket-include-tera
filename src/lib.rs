@@ -17,9 +17,12 @@ mod macros;
 
 pub extern crate tera;
 
+#[macro_use]
+extern crate derivative;
 extern crate crc_any;
 extern crate html_minifier;
 extern crate rc_u8_reader;
+extern crate lru_time_cache;
 
 extern crate serde;
 
@@ -52,7 +55,7 @@ pub use reloadable::ReloadableTera;
 pub use manager::TeraContextManager;
 use fairing::TeraResponseFairing;
 
-const DEFAULT_CACHE_CAPACITY: usize = 256;
+const DEFAULT_CACHE_CAPACITY: usize = 64;
 
 #[inline]
 fn compute_html_etag<S: AsRef<str>>(html: S) -> EntityTag {
