@@ -52,6 +52,8 @@ pub use reloadable::ReloadableTera;
 pub use manager::TeraContextManager;
 use fairing::TeraResponseFairing;
 
+const DEFAULT_CACHE_CAPACITY: usize = 256;
+
 #[inline]
 fn compute_html_etag<S: AsRef<str>>(html: S) -> EntityTag {
     let mut crc64ecma = CRC::crc64ecma();
@@ -125,8 +127,14 @@ impl TeraResponse {
     #[inline]
     /// Create the fairing of `TeraResponse`.
     pub fn fairing<F>(f: F) -> impl Fairing where F: Fn(&mut MutexGuard<ReloadableTera>) + Send + Sync + 'static {
+        let f = Box::new(f);
+
         TeraResponseFairing {
-            custom_callback: Box::new(f)
+            custom_callback: Box::new(move |tera| {
+                f(tera);
+
+                DEFAULT_CACHE_CAPACITY
+            }),
         }
     }
 
@@ -134,8 +142,32 @@ impl TeraResponse {
     #[inline]
     /// Create the fairing of `TeraResponse`.
     pub fn fairing<F>(f: F) -> impl Fairing where F: Fn(&mut Tera) + Send + Sync + 'static {
+        let f = Box::new(f);
+
         TeraResponseFairing {
-            custom_callback: Box::new(f)
+            custom_callback: Box::new(move |tera| {
+                f(tera);
+
+                DEFAULT_CACHE_CAPACITY
+            }),
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    #[inline]
+    /// Create the fairing of `TeraResponse`.
+    pub fn fairing_cache<F>(f: F) -> impl Fairing where F: Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static {
+        TeraResponseFairing {
+            custom_callback: Box::new(f),
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    /// Create the fairing of `TeraResponse`.
+    pub fn fairing_cache<F>(f: F) -> impl Fairing where F: Fn(&mut Tera) -> usize + Send + Sync + 'static {
+        TeraResponseFairing {
+            custom_callback: Box::new(f),
         }
     }
 }
@@ -193,13 +225,8 @@ impl TeraResponse {
 
                 Ok((html.into(), Arc::new(etag)))
             }
-            TeraResponseSource::Cache(name) => {
-                let cache_table = cm.cache_table.lock().unwrap();
-
-                match cache_table.get(name) {
-                    Some((html, etag)) => Ok((html.clone(), etag.clone())),
-                    None => Err(TeraError::msg("This Response hasn't triggered yet."))
-                }
+            TeraResponseSource::Cache(key) => {
+                cm.get(key).ok_or(TeraError::msg("This Response hasn't triggered yet."))
             }
         }
     }
@@ -222,13 +249,8 @@ impl TeraResponse {
 
                 Ok((html.into(), Arc::new(etag)))
             }
-            TeraResponseSource::Cache(name) => {
-                let cache_table = cm.cache_table.lock().unwrap();
-
-                match cache_table.get(name) {
-                    Some((html, etag)) => Ok((html.clone(), etag.clone())),
-                    None => Err(TeraError::msg("This Response hasn't triggered yet."))
-                }
+            TeraResponseSource::Cache(key) => {
+                cm.get(key).ok_or(TeraError::msg("This Response hasn't triggered yet."))
             }
         }
     }
@@ -279,18 +301,16 @@ impl<'a> Responder<'a> for TeraResponse {
             }
             TeraResponseSource::Cache(key) => {
                 let (html, etag) = {
-                    let cache_table = cm.cache_table.lock().unwrap();
-
-                    match cache_table.get(key) {
+                    match cm.get(key) {
                         Some((html, etag)) => {
-                            let is_etag_match = self.client_etag.weak_eq(etag);
+                            let is_etag_match = self.client_etag.weak_eq(&etag);
 
                             if is_etag_match {
                                 response.status(Status::NotModified);
 
                                 return response.ok();
                             } else {
-                                (html.clone(), etag.to_string())
+                                (html, etag.to_string())
                             }
                         }
                         None => {

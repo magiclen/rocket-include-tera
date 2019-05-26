@@ -23,13 +23,13 @@ const FAIRING_NAME: &'static str = "Tera";
 /// The fairing of `TeraResponse`.
 #[cfg(debug_assertions)]
 pub struct TeraResponseFairing {
-    pub(crate) custom_callback: Box<Fn(&mut MutexGuard<ReloadableTera>) + Send + Sync + 'static>
+    pub(crate) custom_callback: Box<Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static>,
 }
 
 /// The fairing of `TeraResponse`.
 #[cfg(not(debug_assertions))]
 pub struct TeraResponseFairing {
-    pub(crate) custom_callback: Box<Fn(&mut Tera) + Send + Sync + 'static>
+    pub(crate) custom_callback: Box<Fn(&mut Tera) -> usize + Send + Sync + 'static>,
 }
 
 impl Fairing for TeraResponseFairing {
@@ -53,9 +53,9 @@ impl Fairing for TeraResponseFairing {
     fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
         let tera = Mutex::new(ReloadableTera::new());
 
-        (self.custom_callback)(&mut tera.lock().unwrap());
+        let cache_capacity = (self.custom_callback)(&mut tera.lock().unwrap());
 
-        let state = TeraContextManager::new(tera);
+        let state = TeraContextManager::new(tera, cache_capacity);
 
         Ok(rocket.manage(state))
     }
@@ -64,9 +64,9 @@ impl Fairing for TeraResponseFairing {
     fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
         let mut tera = Tera::default();
 
-        (self.custom_callback)(&mut tera);
+        let cache_capacity = (self.custom_callback)(&mut tera);
 
-        let state = TeraContextManager::new(tera);
+        let state = TeraContextManager::new(tera, cache_capacity);
 
         Ok(rocket.manage(state))
     }
