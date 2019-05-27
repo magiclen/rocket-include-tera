@@ -229,7 +229,7 @@ impl TeraResponse {
                 Ok((html.into(), Arc::new(etag)))
             }
             TeraResponseSource::Cache(key) => {
-                cm.get(key).ok_or(TeraError::msg("This Response hasn't triggered yet."))
+                cm.get(key).ok_or(TeraError::msg("This response hasn't been triggered yet."))
             }
         }
     }
@@ -253,7 +253,51 @@ impl TeraResponse {
                 Ok((html.into(), Arc::new(etag)))
             }
             TeraResponseSource::Cache(key) => {
-                cm.get(key).ok_or(TeraError::msg("This Response hasn't triggered yet."))
+                cm.get(key).ok_or(TeraError::msg("This response hasn't been triggered yet."))
+            }
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    #[inline]
+    /// Get this response's HTML.
+    pub fn get_html(&self, cm: &TeraContextManager) -> Result<String, TeraError> {
+        match &self.source {
+            TeraResponseSource::Template {
+                name,
+                context,
+                ..
+            } => {
+                let context = build_context(context);
+
+                let html = cm.tera.lock().unwrap().render(name, context)?;
+
+                Ok(html)
+            }
+            TeraResponseSource::Cache(key) => {
+                cm.get(key).map(|(html, _)| html.to_string()).ok_or(TeraError::msg("This response hasn't been triggered yet."))
+            }
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    /// Get this response's HTML.
+    pub fn get_html(&self, cm: &TeraContextManager) -> Result<String, TeraError> {
+        match &self.source {
+            TeraResponseSource::Template {
+                name,
+                context,
+                ..
+            } => {
+                let context = build_context(context);
+
+                let html = cm.tera.render(name, context)?;
+
+                Ok(html)
+            }
+            TeraResponseSource::Cache(key) => {
+                cm.get(key).map(|(html, _)| html.to_string()).ok_or(TeraError::msg("This response hasn't been triggered yet."))
             }
         }
     }
