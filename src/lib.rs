@@ -329,9 +329,7 @@ impl<'a> Responder<'a> for TeraResponse {
                         }
                     }
                     Err(_) => {
-                        response.status(Status::InternalServerError);
-
-                        return response.ok();
+                        return Err(Status::InternalServerError);
                     }
                 };
 
@@ -361,9 +359,7 @@ impl<'a> Responder<'a> for TeraResponse {
                             }
                         }
                         None => {
-                            response.status(Status::InternalServerError);
-
-                            return response.ok();
+                            return Err(Status::InternalServerError);
                         }
                     }
                 };
