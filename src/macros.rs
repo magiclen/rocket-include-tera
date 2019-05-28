@@ -4,9 +4,18 @@
 macro_rules! tera_resources_initialize {
     ( $tera:expr, $($name:expr, $path:expr), * $(,)* ) => {
         use std::fs;
+        use std::collections::HashSet;
+
+        let mut set: HashSet<&'static str> = HashSet::new();
 
         $(
-            $tera.register_template_file($name, $path).unwrap();
+            if set.contains($name) {
+                panic!("The name `{}` is duplicated.", $name);
+            } else {
+                $tera.register_template_file($name, $path).unwrap();
+
+                set.insert($name);
+            }
         )*
     };
 }
@@ -17,9 +26,18 @@ macro_rules! tera_resources_initialize {
 macro_rules! tera_resources_initialize {
     ( $tera:expr, $($name:expr, $path:expr), * $(,)* ) => {
         use std::fs;
+        use std::collections::HashSet;
+
+        let mut set: HashSet<&str> = HashSet::new();
 
         $(
-            $tera.add_raw_template($name, include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $path))).unwrap();
+            if set.contains($name) {
+                panic!("The name `{}` is duplicated.", $name);
+            } else {
+                $tera.add_raw_template($name, include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $path))).unwrap();
+
+                set.insert($name);
+            }
         )*
     };
 }
