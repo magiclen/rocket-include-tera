@@ -1,6 +1,6 @@
 [package]
 name = "rocket-include-tera"
-version = "0.3.5"
+version = "0.3.6"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/rocket-include-tera"
 homepage = "https://magiclen.org/rocket-include-tera"
