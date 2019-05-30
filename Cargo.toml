@@ -26,5 +26,6 @@ serde_json = "1"
 
 rocket-etag-if-none-match = "0.3"
 
-[dev-dependencies]
-json-gettext = "2.2"
+[dev-dependencies.json-gettext]
+version = "3"
+features = ["rocketly"]
