@@ -28,11 +28,11 @@ impl ReloadableTera {
     pub fn register_template_file<P: Into<PathBuf>>(&mut self, name: &'static str, file_path: P) -> Result<(), TeraError> {
         let file_path = file_path.into();
 
-        self.tera.add_template_file(&file_path, Some(name))?;
-
         let metadata = file_path.metadata().map_err(|err| TeraError::msg(err.to_string()))?;
 
         let mtime = metadata.modified().ok();
+
+        self.tera.add_template_file(&file_path, Some(name))?;
 
         self.files.insert(name, (file_path, mtime));
 
