@@ -23,13 +23,13 @@ const FAIRING_NAME: &'static str = "Tera";
 /// The fairing of `TeraResponse`.
 #[cfg(debug_assertions)]
 pub struct TeraResponseFairing {
-    pub(crate) custom_callback: Box<Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static>,
+    pub(crate) custom_callback: Box<dyn Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static>,
 }
 
 /// The fairing of `TeraResponse`.
 #[cfg(not(debug_assertions))]
 pub struct TeraResponseFairing {
-    pub(crate) custom_callback: Box<Fn(&mut Tera) -> usize + Send + Sync + 'static>,
+    pub(crate) custom_callback: Box<dyn Fn(&mut Tera) -> usize + Send + Sync + 'static>,
 }
 
 impl Fairing for TeraResponseFairing {

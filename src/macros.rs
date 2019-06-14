@@ -47,12 +47,9 @@ macro_rules! tera_resources_initialize {
 macro_rules! tera_response {
     ( $name:expr, $data:expr ) => {
         {
-            use ::rocket_include_tera::{TeraResponse, EtagIfNoneMatch};
+            use ::rocket_include_tera::TeraResponse;
 
             TeraResponse::build_from_template(
-                EtagIfNoneMatch {
-                    etag: None
-                },
                 true,
                 $name,
                 $data,
@@ -61,48 +58,9 @@ macro_rules! tera_response {
     };
     ( disable_minify $name:expr, $data:expr ) => {
         {
-            use ::rocket_include_tera::{TeraResponse, EtagIfNoneMatch};
+            use ::rocket_include_tera::TeraResponse;
 
             TeraResponse::build_from_template(
-                EtagIfNoneMatch {
-                    etag: None
-                },
-                false,
-                $name,
-                $data,
-            ).unwrap()
-        }
-    };
-    ( $etag_if_none_match:expr, $name:expr, $data:expr ) => {
-        {
-            use ::rocket_include_tera::{TeraResponse, EtagIfNoneMatch};
-
-            TeraResponse::build_from_template(
-                $etag_if_none_match,
-                true,
-                $name,
-                $data,
-            ).unwrap()
-        }
-    };
-    ( disable_minify $etag_if_none_match:expr, $name:expr, $data:expr ) => {
-        {
-            use ::rocket_include_tera::{TeraResponse, EtagIfNoneMatch};
-
-            TeraResponse::build_from_template(
-                $etag_if_none_match,
-                false,
-                $name,
-                $data,
-            ).unwrap()
-        }
-    };
-    ( $etag_if_none_match:expr, disable_minify $name:expr, $data:expr ) => {
-        {
-            use ::rocket_include_tera::{TeraResponse, EtagIfNoneMatch};
-
-            TeraResponse::build_from_template(
-                $etag_if_none_match,
                 false,
                 $name,
                 $data,
@@ -122,14 +80,6 @@ macro_rules! tera_response_cache {
             $gen
         }
     };
-    ( $etag_if_none_match:expr, $cm:expr, $key:expr, $gen:block ) => {
-        {
-            drop(&$etag_if_none_match);
-            drop(&$cm);
-            drop(&$key);
-            $gen
-        }
-    };
 }
 
 /// Used for wrapping a `TeraResponse` and its constructor, and use a **key** to cache its HTML and ETag in memory. The cache is generated only when you are using the **release** profile.
@@ -142,29 +92,6 @@ macro_rules! tera_response_cache {
 
             if contains {
                 TeraResponse::build_from_cache(
-                    EtagIfNoneMatch {
-                        etag: None
-                    },
-                    $key
-                )
-            } else {
-                let res = $gen;
-
-                let cache = res.get_html_and_etag(&$cm).unwrap();
-
-                $cm.insert($key, cache);
-
-                res
-            }
-        }
-    };
-    ( $etag_if_none_match:expr, $cm:expr, $key:expr, $gen:block ) => {
-        {
-            let contains = $cm.contains_key($key);
-
-            if contains {
-                TeraResponse::build_from_cache(
-                    $etag_if_none_match,
                     $key
                 )
             } else {
