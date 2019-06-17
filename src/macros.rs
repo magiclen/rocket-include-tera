@@ -46,6 +46,9 @@ macro_rules! tera_resources_initialize {
 #[macro_export]
 macro_rules! tera_response {
     ( $name:expr, $data:expr ) => {
+        tera_response!(enable_minify $name, $data)
+    };
+    ( enable_minify $name:expr, $data:expr ) => {
         {
             use ::rocket_include_tera::TeraResponse;
 
@@ -65,6 +68,13 @@ macro_rules! tera_response {
                 $name,
                 $data,
             ).unwrap()
+        }
+    };
+    ( auto_minify $name:expr, $data:expr ) => {
+        if cfg!(debug_assertions) {
+            tera_response!(disable_minify $name, $data)
+        } else {
+            tera_response!(enable_minify $name, $data)
         }
     };
 }

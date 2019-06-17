@@ -49,7 +49,7 @@ fn index_2(cm: State<TeraContextManager>) -> TeraResponse {
             map.insert("placeholder", JSONGetTextValue::from_str("Hello, \"world!\""));
             map.insert("id", JSONGetTextValue::from_u64(0));
 
-            tera_response!("index2", &map)
+            tera_response!(auto_minify "index2", &map)
         }
     )
 }
