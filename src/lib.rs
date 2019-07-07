@@ -37,7 +37,7 @@ use std::io::Cursor;
 use std::sync::MutexGuard;
 use std::sync::Arc;
 
-use crc_any::CRC;
+use crc_any::CRCu64;
 use rc_u8_reader::ArcU8Reader;
 use tera::{Tera, Context, Error as TeraError};
 use serde::Serialize;
@@ -59,7 +59,7 @@ const DEFAULT_CACHE_CAPACITY: usize = 64;
 
 #[inline]
 fn compute_html_etag<S: AsRef<str>>(html: S) -> EntityTag {
-    let mut crc64ecma = CRC::crc64ecma();
+    let mut crc64ecma = CRCu64::crc64();
     crc64ecma.digest(html.as_ref().as_bytes());
     let crc64 = crc64ecma.get_crc();
     EntityTag::new(true, format!("{:X}", crc64))
