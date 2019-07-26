@@ -18,7 +18,7 @@ mod macros;
 pub extern crate tera;
 
 #[macro_use]
-extern crate derivative;
+extern crate educe;
 extern crate crc_any;
 extern crate html_minifier;
 extern crate rc_u8_reader;

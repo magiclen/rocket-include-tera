@@ -1,6 +1,6 @@
 [package]
 name = "rocket-include-tera"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/rocket-include-tera"
 homepage = "https://magiclen.org/rocket-include-tera"
@@ -14,7 +14,7 @@ license = "MIT"
 travis-ci = { repository = "magiclen/rocket-include-tera", branch = "master" }
 
 [dependencies]
-derivative = "1"
+educe = ">=0.0.1"
 rocket = "0.4.2"
 crc-any = "2"
 html-minifier = "1.1"

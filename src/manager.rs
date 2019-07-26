@@ -12,21 +12,21 @@ use crate::lru_time_cache::LruCache;
 
 /// To monitor the state of Tera.
 #[cfg(debug_assertions)]
-#[derive(Derivative)]
-#[derivative(Debug)]
+#[derive(Educe)]
+#[educe(Debug)]
 pub struct TeraContextManager {
     pub tera: Mutex<ReloadableTera>,
-    #[derivative(Debug = "ignore")]
+    #[educe(Debug(ignore))]
     cache_table: Mutex<LruCache<Arc<str>, (Arc<str>, Arc<EntityTag>)>>,
 }
 
 /// To monitor the state of Tera.
 #[cfg(not(debug_assertions))]
-#[derive(Derivative)]
-#[derivative(Debug)]
+#[derive(Educe)]
+#[educe(Debug)]
 pub struct TeraContextManager {
     pub tera: Tera,
-    #[derivative(Debug = "ignore")]
+    #[educe(Debug(ignore))]
     cache_table: Mutex<LruCache<Arc<str>, (Arc<str>, Arc<EntityTag>)>>,
 }
 
