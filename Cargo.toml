@@ -10,8 +10,9 @@ description= "This is a crate which provides macros `tera_resources_initialize!`
 readme = "README.md"
 license = "MIT"
 
-[badges]
-travis-ci = { repository = "magiclen/rocket-include-tera", branch = "master" }
+[badges.travis-ci]
+repository = "magiclen/rocket-include-tera"
+branch = "master"
 
 [dependencies]
 educe = ">=0.0.1"
