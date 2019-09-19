@@ -1,7 +1,8 @@
 [package]
 name = "rocket-include-tera"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Magic Len <len@magiclen.org>"]
+edition = "2018"
 repository = "https://github.com/magiclen/rocket-include-tera"
 homepage = "https://magiclen.org/rocket-include-tera"
 keywords = ["rocket", "server", "web", "static", "tera"]
@@ -20,7 +21,7 @@ crc-any = "2"
 html-minifier = "1.1"
 rc-u8-reader = "2.0.1"
 lru_time_cache = "0.9"
-tera = "1.0.0-beta.13"
+tera = "1.0.0-beta.15"
 serde = "1"
 serde_json = "1"
 

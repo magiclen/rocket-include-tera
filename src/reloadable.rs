@@ -3,8 +3,8 @@ use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-use crate::Tera;
 use crate::tera::Error as TeraError;
+use crate::Tera;
 
 #[derive(Debug)]
 /// Reloadable Tera.
@@ -25,7 +25,11 @@ impl ReloadableTera {
 
     #[inline]
     /// Register a template from a path and it can be reloaded automatically.
-    pub fn register_template_file<P: Into<PathBuf>>(&mut self, name: &'static str, file_path: P) -> Result<(), TeraError> {
+    pub fn register_template_file<P: Into<PathBuf>>(
+        &mut self,
+        name: &'static str,
+        file_path: P,
+    ) -> Result<(), TeraError> {
         let file_path = file_path.into();
 
         let metadata = file_path.metadata().map_err(|err| TeraError::msg(err.to_string()))?;
@@ -50,9 +54,7 @@ impl ReloadableTera {
 
                 Some(file_path)
             }
-            None => {
-                None
-            }
+            None => None,
         }
     }
 
@@ -65,22 +67,14 @@ impl ReloadableTera {
             let (reload, new_mtime) = match mtime {
                 Some(mtime) => {
                     match metadata.modified() {
-                        Ok(new_mtime) => {
-                            (new_mtime > *mtime, Some(new_mtime))
-                        }
-                        Err(_) => {
-                            (true, None)
-                        }
+                        Ok(new_mtime) => (new_mtime > *mtime, Some(new_mtime)),
+                        Err(_) => (true, None),
                     }
                 }
                 None => {
                     match metadata.modified() {
-                        Ok(new_mtime) => {
-                            (true, Some(new_mtime))
-                        }
-                        Err(_) => {
-                            (true, None)
-                        }
+                        Ok(new_mtime) => (true, Some(new_mtime)),
+                        Err(_) => (true, None),
                     }
                 }
             };
@@ -93,6 +87,13 @@ impl ReloadableTera {
         }
 
         Ok(())
+    }
+}
+
+impl Default for ReloadableTera {
+    #[inline]
+    fn default() -> Self {
+        ReloadableTera::new()
     }
 }
 

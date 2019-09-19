@@ -14,6 +14,7 @@ use crate::lru_time_cache::LruCache;
 #[cfg(debug_assertions)]
 #[derive(Educe)]
 #[educe(Debug)]
+#[allow(clippy::type_complexity)]
 pub struct TeraContextManager {
     pub tera: Mutex<ReloadableTera>,
     #[educe(Debug(ignore))]
@@ -24,6 +25,7 @@ pub struct TeraContextManager {
 #[cfg(not(debug_assertions))]
 #[derive(Educe)]
 #[educe(Debug)]
+#[allow(clippy::type_complexity)]
 pub struct TeraContextManager {
     pub tera: Tera,
     #[educe(Debug(ignore))]
@@ -64,12 +66,20 @@ impl TeraContextManager {
     #[inline]
     /// Get the cache by a specific key.
     pub fn get<S: AsRef<str>>(&self, key: S) -> Option<(Arc<str>, Arc<EntityTag>)> {
-        self.cache_table.lock().unwrap().get(key.as_ref()).map(|(html, etag)| (html.clone(), etag.clone()))
+        self.cache_table
+            .lock()
+            .unwrap()
+            .get(key.as_ref())
+            .map(|(html, etag)| (html.clone(), etag.clone()))
     }
 
     #[inline]
     /// Insert a cache.
-    pub fn insert<S: Into<Arc<str>>>(&self, key: S, cache: (Arc<str>, Arc<EntityTag>)) -> Option<(Arc<str>, Arc<EntityTag>)> {
+    pub fn insert<S: Into<Arc<str>>>(
+        &self,
+        key: S,
+        cache: (Arc<str>, Arc<EntityTag>),
+    ) -> Option<(Arc<str>, Arc<EntityTag>)> {
         self.cache_table.lock().unwrap().insert(key.into(), cache)
     }
 }

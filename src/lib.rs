@@ -10,10 +10,10 @@ This is a crate which provides macros `tera_resources_initialize!` and `tera_res
 See `examples`.
 */
 
-mod reloadable;
-mod manager;
 mod fairing;
 mod macros;
+mod manager;
+mod reloadable;
 
 pub extern crate tera;
 
@@ -21,8 +21,8 @@ pub extern crate tera;
 extern crate educe;
 extern crate crc_any;
 extern crate html_minifier;
-extern crate rc_u8_reader;
 extern crate lru_time_cache;
+extern crate rc_u8_reader;
 
 extern crate serde;
 
@@ -33,27 +33,27 @@ extern crate rocket;
 extern crate rocket_etag_if_none_match;
 
 use std::io::Cursor;
+use std::sync::Arc;
 #[cfg(debug_assertions)]
 use std::sync::MutexGuard;
-use std::sync::Arc;
 
 use crc_any::CRCu64;
 use rc_u8_reader::ArcU8Reader;
-use tera::{Tera, Context, Error as TeraError};
 use serde::Serialize;
-use serde_json::{Value, Error as SerdeJsonError};
+use serde_json::{Error as SerdeJsonError, Value};
+use tera::{Context, Error as TeraError, Tera};
 
-use rocket::State;
-use rocket::request::Request;
-use rocket::response::{self, Response, Responder};
-use rocket::http::Status;
 use rocket::fairing::Fairing;
+use rocket::http::Status;
+use rocket::request::Request;
+use rocket::response::{self, Responder, Response};
+use rocket::State;
 
 use rocket_etag_if_none_match::{EntityTag, EtagIfNoneMatch};
 
-pub use reloadable::ReloadableTera;
-pub use manager::TeraContextManager;
 use fairing::TeraResponseFairing;
+pub use manager::TeraContextManager;
+pub use reloadable::ReloadableTera;
 
 const DEFAULT_CACHE_CAPACITY: usize = 64;
 
@@ -97,7 +97,11 @@ pub struct TeraResponse {
 impl TeraResponse {
     #[inline]
     /// Build a `TeraResponse` instance from a specific template.
-    pub fn build_from_template<V: Serialize>(minify: bool, name: &'static str, context: V) -> Result<TeraResponse, SerdeJsonError> {
+    pub fn build_from_template<V: Serialize>(
+        minify: bool,
+        name: &'static str,
+        context: V,
+    ) -> Result<TeraResponse, SerdeJsonError> {
         let context = serde_json::to_value(context)?;
 
         let source = TeraResponseSource::Template {
@@ -126,7 +130,9 @@ impl TeraResponse {
     #[cfg(debug_assertions)]
     #[inline]
     /// Create the fairing of `TeraResponse`.
-    pub fn fairing<F>(f: F) -> impl Fairing where F: Fn(&mut MutexGuard<ReloadableTera>) + Send + Sync + 'static {
+    pub fn fairing<F>(f: F) -> impl Fairing
+    where
+        F: Fn(&mut MutexGuard<ReloadableTera>) + Send + Sync + 'static, {
         let f = Box::new(f);
 
         TeraResponseFairing {
@@ -141,7 +147,9 @@ impl TeraResponse {
     #[cfg(not(debug_assertions))]
     #[inline]
     /// Create the fairing of `TeraResponse`.
-    pub fn fairing<F>(f: F) -> impl Fairing where F: Fn(&mut Tera) + Send + Sync + 'static {
+    pub fn fairing<F>(f: F) -> impl Fairing
+    where
+        F: Fn(&mut Tera) + Send + Sync + 'static, {
         let f = Box::new(f);
 
         TeraResponseFairing {
@@ -156,7 +164,9 @@ impl TeraResponse {
     #[cfg(debug_assertions)]
     #[inline]
     /// Create the fairing of `TeraResponse`.
-    pub fn fairing_cache<F>(f: F) -> impl Fairing where F: Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static {
+    pub fn fairing_cache<F>(f: F) -> impl Fairing
+    where
+        F: Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static, {
         TeraResponseFairing {
             custom_callback: Box::new(f),
         }
@@ -165,7 +175,9 @@ impl TeraResponse {
     #[cfg(not(debug_assertions))]
     #[inline]
     /// Create the fairing of `TeraResponse`.
-    pub fn fairing_cache<F>(f: F) -> impl Fairing where F: Fn(&mut Tera) -> usize + Send + Sync + 'static {
+    pub fn fairing_cache<F>(f: F) -> impl Fairing
+    where
+        F: Fn(&mut Tera) -> usize + Send + Sync + 'static, {
         TeraResponseFairing {
             custom_callback: Box::new(f),
         }
@@ -186,7 +198,7 @@ impl TeraResponse {
 
                 cm.tera.lock().unwrap().render(name, context)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -203,14 +215,17 @@ impl TeraResponse {
 
                 cm.tera.render(name, context)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
     #[cfg(debug_assertions)]
     #[inline]
     /// Get this response's HTML and Etag.
-    pub fn get_html_and_etag(&self, cm: &TeraContextManager) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
+    pub fn get_html_and_etag(
+        &self,
+        cm: &TeraContextManager,
+    ) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
         match &self.source {
             TeraResponseSource::Template {
                 name,
@@ -226,7 +241,8 @@ impl TeraResponse {
                 Ok((html.into(), Arc::new(etag)))
             }
             TeraResponseSource::Cache(key) => {
-                cm.get(key).ok_or(TeraError::msg("This response hasn't been triggered yet."))
+                cm.get(key)
+                    .ok_or_else(|| TeraError::msg("This response hasn't been triggered yet."))
             }
         }
     }
@@ -234,7 +250,10 @@ impl TeraResponse {
     #[cfg(not(debug_assertions))]
     #[inline]
     /// Get this response's HTML and Etag.
-    pub fn get_html_and_etag(&self, cm: &TeraContextManager) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
+    pub fn get_html_and_etag(
+        &self,
+        cm: &TeraContextManager,
+    ) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
         match &self.source {
             TeraResponseSource::Template {
                 name,
@@ -272,7 +291,9 @@ impl TeraResponse {
                 Ok(html)
             }
             TeraResponseSource::Cache(key) => {
-                cm.get(key).map(|(html, _)| html.to_string()).ok_or(TeraError::msg("This response hasn't been triggered yet."))
+                cm.get(key)
+                    .map(|(html, _)| html.to_string())
+                    .ok_or_else(|| TeraError::msg("This response hasn't been triggered yet."))
             }
         }
     }
@@ -294,7 +315,9 @@ impl TeraResponse {
                 Ok(html)
             }
             TeraResponseSource::Cache(key) => {
-                cm.get(key).map(|(html, _)| html.to_string()).ok_or(TeraError::msg("This response hasn't been triggered yet."))
+                cm.get(key)
+                    .map(|(html, _)| html.to_string())
+                    .ok_or(TeraError::msg("This response hasn't been triggered yet."))
             }
         }
     }
@@ -306,7 +329,9 @@ impl<'a> Responder<'a> for TeraResponse {
 
         let mut response = Response::build();
 
-        let cm = request.guard::<State<TeraContextManager>>().expect("TeraContextManager registered in on_attach");
+        let cm = request
+            .guard::<State<TeraContextManager>>()
+            .expect("TeraContextManager registered in on_attach");
 
         match &self.source {
             TeraResponseSource::Template {
