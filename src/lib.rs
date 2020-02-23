@@ -196,7 +196,7 @@ impl TeraResponse {
             } => {
                 let context = build_context(context);
 
-                cm.tera.lock().unwrap().render(name, context)
+                cm.tera.lock().unwrap().render(name, &context)
             }
             _ => unreachable!(),
         }
@@ -234,7 +234,7 @@ impl TeraResponse {
             } => {
                 let context = build_context(context);
 
-                let html = cm.tera.lock().unwrap().render(name, context)?;
+                let html = cm.tera.lock().unwrap().render(name, &context)?;
 
                 let etag = compute_html_etag(&html);
 
@@ -286,7 +286,7 @@ impl TeraResponse {
             } => {
                 let context = build_context(context);
 
-                let html = cm.tera.lock().unwrap().render(name, context)?;
+                let html = cm.tera.lock().unwrap().render(name, &context)?;
 
                 Ok(html)
             }
