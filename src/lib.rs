@@ -213,7 +213,7 @@ impl TeraResponse {
             } => {
                 let context = build_context(context);
 
-                cm.tera.render(name, context)
+                cm.tera.render(name, &context)
             }
             _ => unreachable!(),
         }
@@ -262,7 +262,7 @@ impl TeraResponse {
             } => {
                 let context = build_context(context);
 
-                let html = cm.tera.render(name, context)?;
+                let html = cm.tera.render(name, &context)?;
 
                 let etag = compute_html_etag(&html);
 
@@ -310,7 +310,7 @@ impl TeraResponse {
             } => {
                 let context = build_context(context);
 
-                let html = cm.tera.render(name, context)?;
+                let html = cm.tera.render(name, &context)?;
 
                 Ok(html)
             }
