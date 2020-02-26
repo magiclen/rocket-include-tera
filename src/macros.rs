@@ -84,8 +84,10 @@ macro_rules! tera_response {
 #[cfg(debug_assertions)]
 macro_rules! tera_response_cache {
     ($cm:expr, $key:expr, $gen:block) => {{
-        drop(&$cm);
-        drop(&$key);
+        #[allow(unused_variables)]
+        let __a = &$cm;
+        #[allow(unused_variables)]
+        let __a = &$key;
         $gen
     }};
 }
