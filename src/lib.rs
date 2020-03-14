@@ -228,13 +228,19 @@ impl TeraResponse {
     ) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
         match &self.source {
             TeraResponseSource::Template {
+                minify,
                 name,
                 context,
-                ..
             } => {
                 let context = build_context(context);
 
                 let html = cm.tera.lock().unwrap().render(name, &context)?;
+
+                let html = if *minify {
+                    html_minifier::minify(&html).unwrap()
+                } else {
+                    html
+                };
 
                 let etag = compute_html_etag(&html);
 
@@ -256,13 +262,19 @@ impl TeraResponse {
     ) -> Result<(Arc<str>, Arc<EntityTag>), TeraError> {
         match &self.source {
             TeraResponseSource::Template {
+                minify,
                 name,
                 context,
-                ..
             } => {
                 let context = build_context(context);
 
                 let html = cm.tera.render(name, &context)?;
+
+                let html = if *minify {
+                    html_minifier::minify(&html).unwrap()
+                } else {
+                    html
+                };
 
                 let etag = compute_html_etag(&html);
 
@@ -276,7 +288,7 @@ impl TeraResponse {
 
     #[cfg(debug_assertions)]
     #[inline]
-    /// Get this response's HTML.
+    /// Get this response's HTML without minifying.
     pub fn get_html(&self, cm: &TeraContextManager) -> Result<String, TeraError> {
         match &self.source {
             TeraResponseSource::Template {
@@ -300,7 +312,7 @@ impl TeraResponse {
 
     #[cfg(not(debug_assertions))]
     #[inline]
-    /// Get this response's HTML.
+    /// Get this response's HTML without minifying.
     pub fn get_html(&self, cm: &TeraContextManager) -> Result<String, TeraError> {
         match &self.source {
             TeraResponseSource::Template {
