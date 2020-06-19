@@ -55,7 +55,7 @@ macro_rules! tera_response {
         }
     };
     ( $name:expr, $data:expr ) => {
-        $crate::tera_response!(enable_minify $name, &$data)
+        $crate::tera_response!(enable_minify $name, $data)
     };
     ( enable_minify $name:expr ) => {
         {
@@ -73,7 +73,7 @@ macro_rules! tera_response {
             TeraResponse::build_from_template(
                 true,
                 $name,
-                $data,
+                &$data,
             ).unwrap()
         }
     };
@@ -93,7 +93,7 @@ macro_rules! tera_response {
             TeraResponse::build_from_template(
                 false,
                 $name,
-                $data,
+                &$data,
             ).unwrap()
         }
     };
