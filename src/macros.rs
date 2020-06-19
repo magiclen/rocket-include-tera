@@ -3,8 +3,8 @@
 #[cfg(debug_assertions)]
 macro_rules! tera_resources_initialize {
     ( $tera:expr, $($name:expr, $path:expr), * $(,)* ) => {
-        use std::fs;
-        use std::collections::HashSet;
+        use ::std::fs;
+        use ::std::collections::HashSet;
 
         let mut set: HashSet<&'static str> = HashSet::new();
 
@@ -25,8 +25,8 @@ macro_rules! tera_resources_initialize {
 #[cfg(not(debug_assertions))]
 macro_rules! tera_resources_initialize {
     ( $tera:expr, $($name:expr, $path:expr), * $(,)* ) => {
-        use std::fs;
-        use std::collections::HashSet;
+        use ::std::fs;
+        use ::std::collections::HashSet;
 
         let mut set: HashSet<&str> = HashSet::new();
 
@@ -45,8 +45,26 @@ macro_rules! tera_resources_initialize {
 /// Used for retrieving and rendering the file you input through the macro `tera_resources_initialize!` as a `TeraResponse` instance with rendered HTML. When its `respond_to` method is called, three HTTP headers, **Content-Type**, **Content-Length** and **Etag**, will be automatically added, and the rendered HTML can optionally not be minified.
 #[macro_export]
 macro_rules! tera_response {
+    ( $name:expr ) => {
+        {
+            use ::std::collections::HashMap;
+
+            let map: HashMap<u8, u8> = HashMap::new();
+
+            $crate::tera_response!($name, map)
+        }
+    };
     ( $name:expr, $data:expr ) => {
-        tera_response!(enable_minify $name, $data)
+        $crate::tera_response!(enable_minify $name, &$data)
+    };
+    ( enable_minify $name:expr ) => {
+        {
+            use ::std::collections::HashMap;
+
+            let map: HashMap<u8, u8> = HashMap::new();
+
+            $crate::tera_response!(enable_minify $name, map)
+        }
     };
     ( enable_minify $name:expr, $data:expr ) => {
         {
@@ -59,15 +77,33 @@ macro_rules! tera_response {
             ).unwrap()
         }
     };
+    ( disable_minify $name:expr ) => {
+        {
+            use ::std::collections::HashMap;
+
+            let map: HashMap<u8, u8> = HashMap::new();
+
+            $crate::tera_response!(disable_minify $name, map)
+        }
+    };
     ( disable_minify $name:expr, $data:expr ) => {
         {
-            use ::rocket_include_tera::TeraResponse;
+            use $crate::TeraResponse;
 
             TeraResponse::build_from_template(
                 false,
                 $name,
                 $data,
             ).unwrap()
+        }
+    };
+    ( auto_minify $name:expr ) => {
+        {
+            use ::std::collections::HashMap;
+
+            let map: HashMap<u8, u8> = HashMap::new();
+
+            $crate::tera_response!(auto_minify $name, map)
         }
     };
     ( auto_minify $name:expr, $data:expr ) => {
