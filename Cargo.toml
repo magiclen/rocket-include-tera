@@ -1,6 +1,6 @@
 [package]
 name = "rocket-include-tera"
-version = "0.4.13"
+version = "0.4.14"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/rocket-include-tera"
@@ -10,6 +10,7 @@ categories = ["web-programming"]
 description= "This is a crate which provides macros `tera_resources_initialize!` and `tera_response!` to statically include Tera files from your Rust project and make them be the HTTP response sources quickly."
 readme = "README.md"
 license = "MIT"
+include = ["src/**/*", "Cargo.toml"]
 
 [badges.travis-ci]
 repository = "magiclen/rocket-include-tera"
