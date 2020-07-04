@@ -18,7 +18,7 @@ use crate::lru_time_cache::LruCache;
 pub struct TeraContextManager {
     pub tera: Mutex<ReloadableTera>,
     #[educe(Debug(ignore))]
-    cache_table: Mutex<LruCache<Arc<str>, (Arc<str>, Arc<EntityTag>)>>,
+    cache_table: Mutex<LruCache<String, (Arc<str>, Arc<EntityTag>)>>,
 }
 
 /// To monitor the state of Tera.
@@ -29,7 +29,7 @@ pub struct TeraContextManager {
 pub struct TeraContextManager {
     pub tera: Tera,
     #[educe(Debug(ignore))]
-    cache_table: Mutex<LruCache<Arc<str>, (Arc<str>, Arc<EntityTag>)>>,
+    cache_table: Mutex<LruCache<String, (Arc<str>, Arc<EntityTag>)>>,
 }
 
 impl TeraContextManager {
@@ -75,7 +75,7 @@ impl TeraContextManager {
 
     #[inline]
     /// Insert a cache.
-    pub fn insert<S: Into<Arc<str>>>(
+    pub fn insert<S: Into<String>>(
         &self,
         key: S,
         cache: (Arc<str>, Arc<EntityTag>),
