@@ -44,7 +44,7 @@ use serde_json::{Error as SerdeJsonError, Value};
 use tera::{Context, Error as TeraError, Tera};
 
 use rocket::fairing::Fairing;
-use rocket::http::Status;
+use rocket::http::{Status, ContentType};
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
 use rocket::State;
@@ -376,8 +376,8 @@ impl<'a> Responder<'a> for TeraResponse {
                 };
 
                 response
+                    .header(ContentType::HTML)
                     .raw_header("ETag", etag)
-                    .raw_header("Content-Type", "text/html; charset=utf-8")
                     .sized_body(Cursor::new(html));
             }
             TeraResponseSource::Cache(key) => {
@@ -401,8 +401,8 @@ impl<'a> Responder<'a> for TeraResponse {
                 };
 
                 response
+                    .header(ContentType::HTML)
                     .raw_header("ETag", etag)
-                    .raw_header("Content-Type", "text/html; charset=utf-8")
                     .sized_body(ArcU8Reader::new(html));
             }
         }
