@@ -48,14 +48,10 @@ impl ReloadableTera {
     pub fn unregister_template_file<S: AsRef<str>>(&mut self, name: S) -> Option<PathBuf> {
         let name = name.as_ref();
 
-        match self.files.remove(name) {
-            Some((file_path, _)) => {
-                // TODO Remove template
-
-                Some(file_path)
-            }
-            None => None,
-        }
+        self.files.remove(name).map(|(file_path, _)| {
+            // TODO Remove template
+            file_path
+        })
     }
 
     #[inline]
