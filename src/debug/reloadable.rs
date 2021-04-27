@@ -3,8 +3,7 @@ use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-use crate::tera::Error as TeraError;
-use crate::Tera;
+use crate::tera::{Error as TeraError, Tera};
 
 #[derive(Debug)]
 /// Reloadable Tera.
@@ -14,17 +13,19 @@ pub struct ReloadableTera {
 }
 
 impl ReloadableTera {
-    #[inline]
     /// Create an instance of `ReloadableTera`.
+    #[inline]
     pub fn new() -> ReloadableTera {
+        let tera = Tera::default();
+
         ReloadableTera {
-            tera: Tera::default(),
+            tera,
             files: HashMap::new(),
         }
     }
 
-    #[inline]
     /// Register a template from a path and it can be reloaded automatically.
+    #[inline]
     pub fn register_template_file<P: Into<PathBuf>>(
         &mut self,
         name: &'static str,
@@ -32,7 +33,7 @@ impl ReloadableTera {
     ) -> Result<(), TeraError> {
         let file_path = file_path.into();
 
-        let metadata = file_path.metadata().map_err(|err| TeraError::msg(err.to_string()))?;
+        let metadata = file_path.metadata()?;
 
         let mtime = metadata.modified().ok();
 
@@ -43,8 +44,8 @@ impl ReloadableTera {
         Ok(())
     }
 
-    #[inline]
     /// Unregister a template from a file by a name.
+    #[inline]
     pub fn unregister_template_file<S: AsRef<str>>(&mut self, name: S) -> Option<PathBuf> {
         let name = name.as_ref();
 
@@ -54,11 +55,11 @@ impl ReloadableTera {
         })
     }
 
-    #[inline]
     /// Reload templates if needed.
+    #[inline]
     pub fn reload_if_needed(&mut self) -> Result<(), TeraError> {
         for (name, (file_path, mtime)) in &mut self.files {
-            let metadata = file_path.metadata().map_err(|err| TeraError::msg(err.to_string()))?;
+            let metadata = file_path.metadata()?;
 
             let (reload, new_mtime) = match mtime {
                 Some(mtime) => {
