@@ -20,6 +20,9 @@ extern crate tera;
 #[macro_use]
 extern crate educe;
 
+#[doc(hidden)]
+pub extern crate slash_formatter;
+
 mod functions;
 
 #[cfg(debug_assertions)]
