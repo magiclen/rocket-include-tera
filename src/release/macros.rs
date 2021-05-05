@@ -12,7 +12,7 @@ macro_rules! tera_resources_initialize {
                 if set.contains($name) {
                     panic!("The name `{}` is duplicated.", $name);
                 } else {
-                    $tera.add_raw_template($name, include_str!($crate::slash_formatter::concat_with_file_separator_debug_release!(env!("CARGO_MANIFEST_DIR"), $path))).unwrap();
+                    $tera.add_raw_template($name, include_str!($crate::manifest_dir_macros::path!($path))).unwrap();
 
                     set.insert($name);
                 }

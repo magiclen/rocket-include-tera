@@ -58,7 +58,7 @@ fn rocket() -> _ {
             tera_resources_initialize!(
                 tera,
                 "index" => "examples/views/index.tera",
-                "index2" => "examples/views/index2.tera"
+                "index2" => ("examples", "views", "index2.tera")
             );
         }))
         .mount("/", routes![index, index_disable_minify])
