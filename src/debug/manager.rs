@@ -2,7 +2,7 @@ extern crate html_minifier;
 extern crate lru_time_cache;
 extern crate serde;
 
-use std::sync::Mutex;
+use std::sync::{Mutex, PoisonError};
 
 use serde::Serialize;
 
@@ -38,7 +38,7 @@ impl TeraContextManager {
     ) -> TeraResponse {
         self.tera
             .lock()
-            .unwrap()
+            .unwrap_or_else(PoisonError::into_inner)
             .render(name.as_ref(), &Context::from_serialize(context).unwrap())
             .map(|html| {
                 let etag = compute_data_etag(html.as_bytes());
@@ -63,7 +63,7 @@ impl TeraContextManager {
     pub fn render<S: AsRef<str>, V: Serialize>(&self, name: S, context: V) -> String {
         self.tera
             .lock()
-            .unwrap()
+            .unwrap_or_else(PoisonError::into_inner)
             .render(name.as_ref(), &Context::from_serialize(context).unwrap())
             .unwrap()
     }

@@ -1,4 +1,4 @@
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use crate::rocket::data::Data;
 use crate::rocket::fairing::{Fairing, Info, Kind};
@@ -29,7 +29,8 @@ impl Fairing for TeraResponseFairing {
     async fn on_ignite(&self, rocket: Rocket<Build>) -> Result<Rocket<Build>, Rocket<Build>> {
         let tera = Mutex::new(ReloadableTera::new());
 
-        let cache_capacity = (self.custom_callback)(&mut tera.lock().unwrap());
+        let cache_capacity =
+            (self.custom_callback)(&mut tera.lock().unwrap_or_else(PoisonError::into_inner));
 
         let state = TeraContextManager::new(tera, cache_capacity);
 
@@ -43,7 +44,7 @@ impl Fairing for TeraResponseFairing {
             .await
             .expect("TeraContextManager registered in on_attach");
 
-        cm.tera.lock().unwrap().reload_if_needed().unwrap();
+        cm.tera.lock().unwrap_or_else(PoisonError::into_inner).reload_if_needed().unwrap();
     }
 }
 
