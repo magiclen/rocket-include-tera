@@ -14,7 +14,7 @@ use rocket::State;
 use rocket_include_tera::{EtagIfNoneMatch, TeraContextManager, TeraResponse};
 
 #[get("/")]
-fn index(tera_cm: State<TeraContextManager>, etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
+fn index(tera_cm: &State<TeraContextManager>, etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
     let mut map = HashMap::new();
 
     map.insert("title", "Title");
@@ -25,7 +25,7 @@ fn index(tera_cm: State<TeraContextManager>, etag_if_none_match: EtagIfNoneMatch
 
 #[get("/disable-minify")]
 fn index_disable_minify(
-    tera_cm: State<TeraContextManager>,
+    tera_cm: &State<TeraContextManager>,
     etag_if_none_match: EtagIfNoneMatch,
 ) -> TeraResponse {
     let mut map = HashMap::new();
@@ -37,7 +37,7 @@ fn index_disable_minify(
 }
 
 #[get("/2")]
-fn index_2(cm: State<TeraContextManager>, etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
+fn index_2(cm: &State<TeraContextManager>, etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {
     tera_response_cache!(cm, etag_if_none_match, "index-2", {
         println!("Generate index-2 and cache it...");
 
