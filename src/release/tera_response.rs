@@ -1,5 +1,3 @@
-extern crate rc_u8_reader;
-
 use std::io::Cursor;
 use std::sync::Arc;
 

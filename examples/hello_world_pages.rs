@@ -4,14 +4,13 @@ extern crate rocket;
 #[macro_use]
 extern crate rocket_include_tera;
 
-#[macro_use]
-extern crate serde_json;
-
 use std::collections::HashMap;
 
 use rocket::State;
 
 use rocket_include_tera::{EtagIfNoneMatch, TeraContextManager, TeraResponse};
+
+use serde_json::json;
 
 #[get("/")]
 fn index(tera_cm: &State<TeraContextManager>, etag_if_none_match: EtagIfNoneMatch) -> TeraResponse {

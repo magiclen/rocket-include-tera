@@ -1,13 +1,10 @@
-extern crate html_minifier;
-extern crate lru_time_cache;
-extern crate serde;
-
 use std::sync::{Mutex, PoisonError};
 
 use serde::Serialize;
 
+use tera::Context;
+
 use crate::functions::compute_data_etag;
-use crate::tera::Context;
 use crate::EtagIfNoneMatch;
 
 use super::{ReloadableTera, TeraResponse};

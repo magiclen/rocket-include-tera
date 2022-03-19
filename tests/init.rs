@@ -1,5 +1,3 @@
-extern crate rocket_include_tera;
-
 use rocket_include_tera::*;
 
 #[test]

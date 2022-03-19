@@ -1,8 +1,8 @@
 [package]
 name = "rocket-include-tera"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Magic Len <len@magiclen.org>"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/magiclen/rocket-include-tera"
 homepage = "https://magiclen.org/rocket-include-tera"
 keywords = ["rocket", "server", "web", "static", "tera"]
@@ -14,7 +14,6 @@ include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
 rocket = "0.5.0-rc.1"
-wyhash = "0.5.0"
 html-minifier = "3"
 rc-u8-reader = { version = "2.0.14", features = ["tokio"] }
 lru_time_cache = "0.11"

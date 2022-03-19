@@ -11,12 +11,6 @@ This is a crate which provides macros `tera_resources_initialize!` and `tera_res
 See `examples`.
 */
 
-extern crate rocket;
-
-extern crate rocket_etag_if_none_match;
-
-extern crate tera;
-
 #[macro_use]
 extern crate educe;
 

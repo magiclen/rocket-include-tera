@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-use crate::tera::{Error as TeraError, Tera};
+use tera::{Error as TeraError, Tera};
 
 #[derive(Debug)]
 /// Reloadable Tera.

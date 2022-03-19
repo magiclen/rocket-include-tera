@@ -1,9 +1,9 @@
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-use crate::rocket::data::Data;
-use crate::rocket::fairing::{Fairing, Info, Kind};
-use crate::rocket::request::Request;
-use crate::rocket::{Build, Rocket};
+use rocket::data::Data;
+use rocket::fairing::{Fairing, Info, Kind};
+use rocket::request::Request;
+use rocket::{Build, Rocket};
 
 use super::{ReloadableTera, TeraContextManager, TeraResponse};
 
