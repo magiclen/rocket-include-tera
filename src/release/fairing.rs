@@ -1,7 +1,7 @@
-use crate::rocket::fairing::{Fairing, Info, Kind};
-use crate::rocket::{Build, Rocket};
+use rocket::fairing::{Fairing, Info, Kind};
+use rocket::{Build, Rocket};
 
-use crate::tera::Tera;
+use tera::Tera;
 
 use super::{TeraContextManager, TeraResponse};
 

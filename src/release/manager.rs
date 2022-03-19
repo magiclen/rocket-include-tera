@@ -4,8 +4,9 @@ use std::sync::Mutex;
 use lru_time_cache::LruCache;
 use serde::Serialize;
 
+use tera::{Context, Tera};
+
 use crate::functions::compute_data_etag;
-use crate::tera::{Context, Tera};
 use crate::{EntityTag, EtagIfNoneMatch};
 
 use super::TeraResponse;
@@ -66,10 +67,10 @@ impl TeraContextManager {
         key: K,
     ) -> Option<TeraResponse> {
         self.cache_table.lock().unwrap().get(key.as_ref()).map(|(html, etag)| {
-            if etag_if_none_match.weak_eq(&etag) {
+            if etag_if_none_match.weak_eq(etag) {
                 TeraResponse::not_modified()
             } else {
-                TeraResponse::build_cache(html.clone(), &etag)
+                TeraResponse::build_cache(html.clone(), etag)
             }
         })
     }

@@ -3,9 +3,10 @@ use std::sync::Arc;
 
 use rc_u8_reader::ArcU8Reader;
 
-use crate::rocket::http::Status;
-use crate::rocket::request::Request;
-use crate::rocket::response::{self, Responder, Response};
+use rocket::http::Status;
+use rocket::request::Request;
+use rocket::response::{self, Responder, Response};
+
 use crate::EntityTag;
 
 #[derive(Debug)]
