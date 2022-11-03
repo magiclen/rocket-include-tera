@@ -11,6 +11,7 @@ const FAIRING_NAME: &str = "Tera (Debug)";
 
 /// The fairing of `TeraResponse`.
 pub struct TeraResponseFairing {
+    #[allow(clippy::type_complexity)]
     pub(crate) custom_callback:
         Box<dyn Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static>,
 }
