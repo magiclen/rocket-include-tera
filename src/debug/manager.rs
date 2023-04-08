@@ -1,13 +1,10 @@
 use std::sync::{Mutex, PoisonError};
 
 use serde::Serialize;
-
 use tera::Context;
 
-use crate::functions::compute_data_etag;
-use crate::EtagIfNoneMatch;
-
 use super::{ReloadableTera, TeraResponse};
+use crate::{functions::compute_data_etag, EtagIfNoneMatch};
 
 /// To monitor the state of Tera.
 #[derive(Educe)]
@@ -43,11 +40,7 @@ impl TeraContextManager {
                 if etag_if_none_match.weak_eq(&etag) {
                     TeraResponse::not_modified()
                 } else {
-                    let html = if minify {
-                        html_minifier::minify(html).unwrap()
-                    } else {
-                        html
-                    };
+                    let html = if minify { html_minifier::minify(html).unwrap() } else { html };
 
                     TeraResponse::build_not_cache(html, &etag)
                 }

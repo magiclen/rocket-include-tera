@@ -1,22 +1,18 @@
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use lru_time_cache::LruCache;
 use serde::Serialize;
-
 use tera::{Context, Tera};
 
-use crate::functions::compute_data_etag;
-use crate::{EntityTag, EtagIfNoneMatch};
-
 use super::TeraResponse;
+use crate::{functions::compute_data_etag, EntityTag, EtagIfNoneMatch};
 
 #[allow(clippy::type_complexity)]
 /// To monitor the state of Tera.
 #[derive(Educe)]
 #[educe(Debug)]
 pub struct TeraContextManager {
-    pub tera: Tera,
+    pub tera:    Tera,
     #[educe(Debug(ignore))]
     cache_table: Mutex<LruCache<String, (Arc<str>, Arc<EntityTag<'static>>)>>,
 }
@@ -47,11 +43,7 @@ impl TeraContextManager {
                 if etag_if_none_match.weak_eq(&etag) {
                     TeraResponse::not_modified()
                 } else {
-                    let html = if minify {
-                        html_minifier::minify(html).unwrap()
-                    } else {
-                        html
-                    };
+                    let html = if minify { html_minifier::minify(html).unwrap() } else { html };
 
                     TeraResponse::build_not_cache(html, &etag)
                 }

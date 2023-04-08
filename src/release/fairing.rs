@@ -1,6 +1,7 @@
-use rocket::fairing::{Fairing, Info, Kind};
-use rocket::{Build, Rocket};
-
+use rocket::{
+    fairing::{Fairing, Info, Kind},
+    Build, Rocket,
+};
 use tera::Tera;
 
 use super::{TeraContextManager, TeraResponse};
@@ -17,8 +18,7 @@ impl Fairing for TeraResponseFairing {
     #[inline]
     fn info(&self) -> Info {
         Info {
-            name: FAIRING_NAME,
-            kind: Kind::Ignite,
+            name: FAIRING_NAME, kind: Kind::Ignite
         }
     }
 
@@ -57,7 +57,7 @@ impl TeraResponse {
     where
         F: Fn(&mut Tera) -> usize + Send + Sync + 'static, {
         TeraResponseFairing {
-            custom_callback: Box::new(f),
+            custom_callback: Box::new(f)
         }
     }
 }

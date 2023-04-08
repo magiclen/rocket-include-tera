@@ -1,14 +1,16 @@
-use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
-use std::path::PathBuf;
-use std::time::SystemTime;
+use std::{
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+    path::PathBuf,
+    time::SystemTime,
+};
 
 use tera::{Error as TeraError, Tera};
 
 #[derive(Debug)]
 /// Reloadable Tera.
 pub struct ReloadableTera {
-    tera: Tera,
+    tera:  Tera,
     files: HashMap<&'static str, (PathBuf, Option<SystemTime>)>,
 }
 
@@ -62,18 +64,14 @@ impl ReloadableTera {
             let metadata = file_path.metadata()?;
 
             let (reload, new_mtime) = match mtime {
-                Some(mtime) => {
-                    match metadata.modified() {
-                        Ok(new_mtime) => (new_mtime > *mtime, Some(new_mtime)),
-                        Err(_) => (true, None),
-                    }
-                }
-                None => {
-                    match metadata.modified() {
-                        Ok(new_mtime) => (true, Some(new_mtime)),
-                        Err(_) => (true, None),
-                    }
-                }
+                Some(mtime) => match metadata.modified() {
+                    Ok(new_mtime) => (new_mtime > *mtime, Some(new_mtime)),
+                    Err(_) => (true, None),
+                },
+                None => match metadata.modified() {
+                    Ok(new_mtime) => (true, Some(new_mtime)),
+                    Err(_) => (true, None),
+                },
             };
 
             if reload {

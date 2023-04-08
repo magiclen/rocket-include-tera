@@ -1,9 +1,11 @@
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-use rocket::data::Data;
-use rocket::fairing::{Fairing, Info, Kind};
-use rocket::request::Request;
-use rocket::{Build, Rocket};
+use rocket::{
+    data::Data,
+    fairing::{Fairing, Info, Kind},
+    request::Request,
+    Build, Rocket,
+};
 
 use super::{ReloadableTera, TeraContextManager, TeraResponse};
 
@@ -21,8 +23,7 @@ impl Fairing for TeraResponseFairing {
     #[inline]
     fn info(&self) -> Info {
         Info {
-            name: FAIRING_NAME,
-            kind: Kind::Ignite | Kind::Request,
+            name: FAIRING_NAME, kind: Kind::Ignite | Kind::Request
         }
     }
 
@@ -72,7 +73,7 @@ impl TeraResponse {
     where
         F: Fn(&mut MutexGuard<ReloadableTera>) -> usize + Send + Sync + 'static, {
         TeraResponseFairing {
-            custom_callback: Box::new(f),
+            custom_callback: Box::new(f)
         }
     }
 }

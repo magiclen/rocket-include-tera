@@ -7,9 +7,7 @@ extern crate rocket_include_tera;
 use std::collections::HashMap;
 
 use rocket::State;
-
 use rocket_include_tera::{EtagIfNoneMatch, TeraContextManager, TeraResponse};
-
 use serde_json::json;
 
 #[get("/")]

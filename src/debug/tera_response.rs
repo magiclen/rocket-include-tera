@@ -1,15 +1,17 @@
 use std::io::Cursor;
 
-use rocket::http::Status;
-use rocket::request::Request;
-use rocket::response::{self, Responder, Response};
+use rocket::{
+    http::Status,
+    request::Request,
+    response::{self, Responder, Response},
+};
 
 use crate::{EntityTag, EtagIfNoneMatch};
 
 #[derive(Debug)]
 struct TeraResponseInner {
     content: String,
-    etag: String,
+    etag:    String,
 }
 
 #[derive(Debug)]
@@ -26,8 +28,7 @@ impl TeraResponse {
     ) -> TeraResponse {
         TeraResponse {
             inner: Some(TeraResponseInner {
-                content: content.into(),
-                etag: etag.to_string(),
+                content: content.into(), etag: etag.to_string()
             }),
         }
     }
@@ -36,7 +37,7 @@ impl TeraResponse {
     #[inline]
     pub const fn not_modified() -> TeraResponse {
         TeraResponse {
-            inner: None,
+            inner: None
         }
     }
 

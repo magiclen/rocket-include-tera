@@ -1,24 +1,18 @@
-use std::io::Cursor;
-use std::sync::Arc;
+use std::{io::Cursor, sync::Arc};
 
 use rc_u8_reader::ArcU8Reader;
-
-use rocket::http::Status;
-use rocket::request::Request;
-use rocket::response::{self, Responder, Response};
+use rocket::{
+    http::Status,
+    request::Request,
+    response::{self, Responder, Response},
+};
 
 use crate::EntityTag;
 
 #[derive(Debug)]
 enum TeraResponseInner {
-    NotCache {
-        content: String,
-        etag: String,
-    },
-    Cache {
-        content: Arc<str>,
-        etag: String,
-    },
+    NotCache { content: String, etag: String },
+    Cache { content: Arc<str>, etag: String },
 }
 
 #[derive(Debug)]
@@ -36,7 +30,7 @@ impl TeraResponse {
         TeraResponse {
             inner: Some(TeraResponseInner::NotCache {
                 content: content.into(),
-                etag: etag.to_string(),
+                etag:    etag.to_string(),
             }),
         }
     }
@@ -56,7 +50,7 @@ impl TeraResponse {
     #[inline]
     pub const fn not_modified() -> TeraResponse {
         TeraResponse {
-            inner: None,
+            inner: None
         }
     }
 
@@ -74,7 +68,7 @@ impl TeraResponse {
                 let etag = unsafe { EntityTag::with_string_unchecked(false, etag) };
 
                 Some((Arc::from(content), etag))
-            }
+            },
             Some(TeraResponseInner::Cache {
                 content,
                 mut etag,
@@ -85,7 +79,7 @@ impl TeraResponse {
                 let etag = unsafe { EntityTag::with_string_unchecked(false, etag) };
 
                 Some((content, etag))
-            }
+            },
             None => None,
         }
     }
@@ -106,14 +100,14 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for TeraResponse {
                 } => {
                     response.raw_header("Etag", etag);
                     response.sized_body(content.len(), Cursor::new(content));
-                }
+                },
                 TeraResponseInner::Cache {
                     content,
                     etag,
                 } => {
                     response.raw_header("Etag", etag);
                     response.sized_body(content.len(), ArcU8Reader::new(content));
-                }
+                },
             }
         } else {
             response.status(Status::NotModified);

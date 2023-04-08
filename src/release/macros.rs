@@ -35,10 +35,10 @@ macro_rules! tera_response_cache {
                         let res = $crate::TeraResponse::build_cache(content.clone(), &etag);
                         $cm.insert($key, (content, ::std::sync::Arc::new(etag)));
                         res
-                    }
+                    },
                     None => $crate::TeraResponse::not_modified(),
                 }
-            }
+            },
         }
     };
 }
