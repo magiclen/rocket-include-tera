@@ -9,7 +9,6 @@ homepage = "https://magiclen.org/rocket-include-tera"
 keywords = ["rocket", "server", "web", "static", "tera"]
 categories = ["web-programming"]
 description = "This is a crate which provides macros `tera_resources_initialize!` and `tera_response!` to statically include Tera files from your Rust project and make them be the HTTP response sources quickly."
-readme = "README.md"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
