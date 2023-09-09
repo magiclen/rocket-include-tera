@@ -1,9 +1,9 @@
 [package]
 name = "rocket-include-tera"
-version = "0.5.4"
+version = "0.5.5"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
-rust-version = "1.63"
+rust-version = "1.67"
 repository = "https://github.com/magiclen/rocket-include-tera"
 homepage = "https://magiclen.org/rocket-include-tera"
 keywords = ["rocket", "server", "web", "static", "tera"]
