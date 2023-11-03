@@ -1,9 +1,9 @@
 [package]
 name = "rocket-include-tera"
-version = "0.5.5"
+version = "0.5.6"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
-rust-version = "1.67"
+rust-version = "1.69"
 repository = "https://github.com/magiclen/rocket-include-tera"
 homepage = "https://magiclen.org/rocket-include-tera"
 keywords = ["rocket", "server", "web", "static", "tera"]
@@ -13,7 +13,7 @@ license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
-rocket = "0.5.0-rc.3"
+rocket = "0.5.0-rc.4"
 html-minifier = "4"
 rc-u8-reader = { version = "2.0.14", features = ["tokio"] }
 lru_time_cache = "0.11"
