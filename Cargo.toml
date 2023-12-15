@@ -1,6 +1,6 @@
 [package]
 name = "rocket-include-tera"
-version = "0.5.6"
+version = "0.5.7"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
 rust-version = "1.69"
@@ -13,8 +13,8 @@ license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
-rocket = "0.5.0-rc.4"
-html-minifier = "4"
+rocket = "0.5"
+html-minifier = "5"
 rc-u8-reader = { version = "2.0.14", features = ["tokio"] }
 lru_time_cache = "0.11"
 tera = "1.5"
