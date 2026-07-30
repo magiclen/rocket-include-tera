@@ -32,10 +32,6 @@ macro_rules! tera_response_cache {
 
         let res = $gen;
 
-        if res.weak_eq(&$etag_if_none_match) {
-            $crate::TeraResponse::not_modified()
-        } else {
-            res
-        }
+        if res.weak_eq(&$etag_if_none_match) { $crate::TeraResponse::not_modified() } else { res }
     }};
 }

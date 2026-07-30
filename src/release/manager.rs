@@ -5,7 +5,7 @@ use serde::Serialize;
 use tera::{Context, Tera};
 
 use super::TeraResponse;
-use crate::{functions::compute_data_etag, EntityTag, EtagIfNoneMatch};
+use crate::{EntityTag, EtagIfNoneMatch, functions::compute_data_etag};
 
 #[allow(clippy::type_complexity)]
 /// To monitor the state of Tera.

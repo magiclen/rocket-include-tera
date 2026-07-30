@@ -47,9 +47,11 @@ impl TeraResponse {
         self.inner
             .as_ref()
             .map(|inner| {
-                etag_if_none_match.weak_eq(unsafe {
-                    &EntityTag::with_str_unchecked(false, &inner.etag[1..(inner.etag.len() - 1)])
-                })
+                let etag = unsafe {
+                    EntityTag::with_str_unchecked(false, &inner.etag[1..(inner.etag.len() - 1)])
+                };
+
+                etag_if_none_match.weak_eq(&etag)
             })
             .unwrap_or(false)
     }

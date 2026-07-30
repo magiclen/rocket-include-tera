@@ -31,6 +31,6 @@ mod macros;
 pub use debug::*;
 #[cfg(not(debug_assertions))]
 pub use release::*;
-pub use rocket_etag_if_none_match::{entity_tag::EntityTag, EtagIfNoneMatch};
+pub use rocket_etag_if_none_match::{EtagIfNoneMatch, entity_tag::EntityTag};
 
 const DEFAULT_CACHE_CAPACITY: usize = 64;

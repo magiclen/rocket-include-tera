@@ -1,10 +1,10 @@
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use rocket::{
+    Build, Rocket,
     data::Data,
     fairing::{Fairing, Info, Kind},
     request::Request,
-    Build, Rocket,
 };
 
 use super::{ReloadableTera, TeraContextManager, TeraResponse};

@@ -4,7 +4,7 @@ use serde::Serialize;
 use tera::Context;
 
 use super::{ReloadableTera, TeraResponse};
-use crate::{functions::compute_data_etag, EtagIfNoneMatch};
+use crate::{EtagIfNoneMatch, functions::compute_data_etag};
 
 /// To monitor the state of Tera.
 #[derive(Educe)]
@@ -33,7 +33,7 @@ impl TeraContextManager {
         self.tera
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .render(name.as_ref(), &Context::from_serialize(context).unwrap())
+            .render(name.as_ref(), &Context::from_serialize(&context).unwrap())
             .map(|html| {
                 let etag = compute_data_etag(html.as_bytes());
 
@@ -54,7 +54,7 @@ impl TeraContextManager {
         self.tera
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .render(name.as_ref(), &Context::from_serialize(context).unwrap())
+            .render(name.as_ref(), &Context::from_serialize(&context).unwrap())
             .unwrap()
     }
 }

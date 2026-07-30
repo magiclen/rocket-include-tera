@@ -1,6 +1,6 @@
 use rocket::{
-    fairing::{Fairing, Info, Kind},
     Build, Rocket,
+    fairing::{Fairing, Info, Kind},
 };
 use tera::Tera;
 
