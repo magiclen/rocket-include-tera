@@ -1,6 +1,6 @@
 [package]
 name = "rocket-include-tera"
-version = "0.5.8"
+version = "0.6.0"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2024"
 rust-version = "1.89"
@@ -18,10 +18,12 @@ html-minifier = "5"
 lru_time_cache = "0.11"
 tera = "2"
 serde = "1.0.184"
-serde_json = "1.0.33"
 manifest-dir-macros = { version = "0.1.3", features = ["tuple"] }
 educe = { version = "0.7", default-features = false, features = ["Debug"] }
 
 rocket-etag-if-none-match = "0.5"
 # `EntityTag` comes from `rocket-etag-if-none-match`, which does not enable `weak-hasher` itself. This direct dependency turns that feature on through feature unification, so it has to keep resolving to the very same version of `entity-tag` that `rocket-etag-if-none-match` depends on.
 entity-tag = { version = "0.2", features = ["weak-hasher"] }
+
+[dev-dependencies]
+serde_json = "1"

@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, PoisonError};
 
 use lru_time_cache::LruCache;
 use serde::Serialize;
@@ -36,7 +36,7 @@ impl TeraContextManager {
         context: V,
     ) -> TeraResponse {
         self.tera
-            .render(name.as_ref(), &Context::from_serialize(context).unwrap())
+            .render(name.as_ref(), &Context::from_serialize(&context).unwrap())
             .map(|html| {
                 let etag = compute_data_etag(html.as_bytes());
 
@@ -45,7 +45,7 @@ impl TeraContextManager {
                 } else {
                     let html = if minify { html_minifier::minify(html).unwrap() } else { html };
 
-                    TeraResponse::build_not_cache(html, &etag)
+                    TeraResponse::build_not_cache(html, etag)
                 }
             })
             .unwrap()
@@ -58,31 +58,34 @@ impl TeraContextManager {
         etag_if_none_match: &EtagIfNoneMatch<'_>,
         key: K,
     ) -> Option<TeraResponse> {
-        self.cache_table.lock().unwrap().get(key.as_ref()).map(|(html, etag)| {
-            if etag_if_none_match.weak_eq(etag) {
-                TeraResponse::not_modified()
-            } else {
-                TeraResponse::build_cache(html.clone(), etag)
-            }
-        })
+        self.cache_table.lock().unwrap_or_else(PoisonError::into_inner).get(key.as_ref()).map(
+            |(html, etag)| {
+                if etag_if_none_match.weak_eq(etag) {
+                    TeraResponse::not_modified()
+                } else {
+                    TeraResponse::build_cache(html.clone(), etag.clone())
+                }
+            },
+        )
     }
 
     /// Render a template.
     #[inline]
     pub fn render<S: AsRef<str>, V: Serialize>(&self, name: S, context: V) -> String {
-        self.tera.render(name.as_ref(), &Context::from_serialize(context).unwrap()).unwrap()
+        self.tera.render(name.as_ref(), &Context::from_serialize(&context).unwrap()).unwrap()
     }
 
     /// Clear cache.
     #[inline]
     pub fn clear_cache(&self) {
-        self.cache_table.lock().unwrap().clear();
+        self.cache_table.lock().unwrap_or_else(PoisonError::into_inner).clear();
     }
 
     /// Check if a cache key exists.
     #[inline]
     pub fn contains_key<S: AsRef<str>>(&self, key: S) -> bool {
-        self.cache_table.lock().unwrap().get(key.as_ref()).is_some()
+        // `contains_key` is used instead of `get` because merely asking about a key should not make it the most recently used one.
+        self.cache_table.lock().unwrap_or_else(PoisonError::into_inner).contains_key(key.as_ref())
     }
 
     /// Get the cache by a specific key.
@@ -90,7 +93,7 @@ impl TeraContextManager {
     pub fn get<S: AsRef<str>>(&self, key: S) -> Option<(Arc<str>, Arc<EntityTag<'static>>)> {
         self.cache_table
             .lock()
-            .unwrap()
+            .unwrap_or_else(PoisonError::into_inner)
             .get(key.as_ref())
             .map(|(html, etag)| (html.clone(), etag.clone()))
     }
@@ -102,6 +105,6 @@ impl TeraContextManager {
         key: S,
         cache: (Arc<str>, Arc<EntityTag<'static>>),
     ) -> Option<(Arc<str>, Arc<EntityTag<'static>>)> {
-        self.cache_table.lock().unwrap().insert(key.into(), cache)
+        self.cache_table.lock().unwrap_or_else(PoisonError::into_inner).insert(key.into(), cache)
     }
 }

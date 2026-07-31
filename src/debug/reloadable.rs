@@ -47,14 +47,13 @@ impl ReloadableTera {
     }
 
     /// Unregister a template from a file by a name.
+    ///
+    /// Tera provides no API for removing a single template, so the template itself stays inside Tera and only stops being reloaded.
     #[inline]
     pub fn unregister_template_file<S: AsRef<str>>(&mut self, name: S) -> Option<PathBuf> {
         let name = name.as_ref();
 
-        self.files.remove(name).map(|(file_path, _)| {
-            // TODO Remove template
-            file_path
-        })
+        self.files.remove(name).map(|(file_path, _)| file_path)
     }
 
     /// Reload templates if needed.

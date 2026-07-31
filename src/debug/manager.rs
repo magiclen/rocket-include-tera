@@ -42,7 +42,7 @@ impl TeraContextManager {
                 } else {
                     let html = if minify { html_minifier::minify(html).unwrap() } else { html };
 
-                    TeraResponse::build_not_cache(html, &etag)
+                    TeraResponse::build_not_cache(html, etag)
                 }
             })
             .unwrap()

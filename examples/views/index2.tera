@@ -6,5 +6,5 @@
     <title>{{title}}</title>
 </head>
 <body>
-<input id="input-{{id + 1}}" type="text" placeholder="{{placeholder | escape}}">
+<input id="input-{{id + 1}}" type="text" placeholder="{{placeholder | escape_html}}">
 </body>

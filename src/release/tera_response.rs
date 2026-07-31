@@ -1,6 +1,5 @@
 use std::{io::Cursor, sync::Arc};
 
-use rc_u8_reader::ArcU8Reader;
 use rocket::{
     http::Status,
     request::Request,
@@ -11,8 +10,8 @@ use crate::EntityTag;
 
 #[derive(Debug)]
 enum TeraResponseInner {
-    NotCache { content: String, etag: String },
-    Cache { content: Arc<str>, etag: String },
+    NotCache { content: String, etag: EntityTag<'static> },
+    Cache { content: Arc<str>, etag: Arc<EntityTag<'static>> },
 }
 
 #[derive(Debug)]
@@ -25,23 +24,23 @@ impl TeraResponse {
     #[inline]
     pub(crate) fn build_not_cache<S: Into<String>>(
         content: S,
-        etag: &EntityTag<'static>,
+        etag: EntityTag<'static>,
     ) -> TeraResponse {
         TeraResponse {
             inner: Some(TeraResponseInner::NotCache {
                 content: content.into(),
-                etag:    etag.to_string(),
+                etag,
             }),
         }
     }
 
     #[doc(hidden)]
     #[inline]
-    pub fn build_cache(content: Arc<str>, etag: &EntityTag<'static>) -> TeraResponse {
+    pub fn build_cache(content: Arc<str>, etag: Arc<EntityTag<'static>>) -> TeraResponse {
         TeraResponse {
             inner: Some(TeraResponseInner::Cache {
                 content,
-                etag: etag.to_string(),
+                etag,
             }),
         }
     }
@@ -56,30 +55,16 @@ impl TeraResponse {
 
     #[doc(hidden)]
     #[inline]
-    pub fn into_html_and_etag(self) -> Option<(Arc<str>, EntityTag<'static>)> {
+    pub fn into_html_and_etag(self) -> Option<(Arc<str>, Arc<EntityTag<'static>>)> {
         match self.inner {
             Some(TeraResponseInner::NotCache {
                 content,
-                mut etag,
-            }) => {
-                etag.remove(etag.len() - 1);
-                etag.remove(0);
-
-                let etag = unsafe { EntityTag::with_string_unchecked(false, etag) };
-
-                Some((Arc::from(content), etag))
-            },
+                etag,
+            }) => Some((Arc::from(content), Arc::new(etag))),
             Some(TeraResponseInner::Cache {
                 content,
-                mut etag,
-            }) => {
-                etag.remove(etag.len() - 1);
-                etag.remove(0);
-
-                let etag = unsafe { EntityTag::with_string_unchecked(false, etag) };
-
-                Some((content, etag))
-            },
+                etag,
+            }) => Some((content, etag)),
             None => None,
         }
     }
@@ -88,6 +73,17 @@ impl TeraResponse {
 impl<'r, 'o: 'r> Responder<'r, 'o> for TeraResponse {
     #[inline]
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'o> {
+        // `Arc<str>` does not implement `AsRef<[u8]>`, so wrap it to let `Cursor` read the cached HTML without copying it.
+        #[derive(Debug)]
+        struct SharedHtml(Arc<str>);
+
+        impl AsRef<[u8]> for SharedHtml {
+            #[inline]
+            fn as_ref(&self) -> &[u8] {
+                self.0.as_bytes()
+            }
+        }
+
         let mut response = Response::build();
 
         if let Some(inner) = self.inner {
@@ -98,15 +94,15 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for TeraResponse {
                     content,
                     etag,
                 } => {
-                    response.raw_header("Etag", etag);
+                    response.raw_header("Etag", etag.to_string());
                     response.sized_body(content.len(), Cursor::new(content));
                 },
                 TeraResponseInner::Cache {
                     content,
                     etag,
                 } => {
-                    response.raw_header("Etag", etag);
-                    response.sized_body(content.len(), ArcU8Reader::new(content));
+                    response.raw_header("Etag", etag.to_string());
+                    response.sized_body(content.len(), Cursor::new(SharedHtml(content)));
                 },
             }
         } else {

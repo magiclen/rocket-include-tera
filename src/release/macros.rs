@@ -3,10 +3,9 @@
 macro_rules! tera_resources_initialize {
     ( $tera:expr, $($name:expr => $path:expr), * $(,)* ) => {
         {
-            use ::std::fs;
             use ::std::collections::HashSet;
 
-            let mut set: HashSet<&str> = HashSet::new();
+            let mut set: HashSet<&'static str> = HashSet::new();
 
             $(
                 if set.contains($name) {
@@ -32,9 +31,9 @@ macro_rules! tera_response_cache {
 
                 match res.into_html_and_etag() {
                     Some((content, etag)) => {
-                        let res = $crate::TeraResponse::build_cache(content.clone(), &etag);
-                        $cm.insert($key, (content, ::std::sync::Arc::new(etag)));
-                        res
+                        $cm.insert($key, (content.clone(), etag.clone()));
+
+                        $crate::TeraResponse::build_cache(content, etag)
                     },
                     None => $crate::TeraResponse::not_modified(),
                 }
