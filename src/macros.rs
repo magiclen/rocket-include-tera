@@ -1,4 +1,7 @@
-/// Used for retrieving and rendering the file you input through the macro `tera_resources_initialize!` as a `TeraResponse` instance with rendered HTML. When its `respond_to` method is called, three HTTP headers, **Content-Type**, **Content-Length** and **Etag**, will be automatically added, and the rendered HTML can optionally not be minified.
+/// Render a registered template as a `TeraResponse`.
+/// A `200 OK` response includes `Content-Type`, `Content-Length`, and `ETag`.
+/// A `304 Not Modified` response includes the `ETag` and has no body.
+/// You can turn off HTML minification.
 #[macro_export]
 macro_rules! tera_response {
     ( $cm:expr, $etag_if_none_match:expr, $name:expr ) => {
@@ -57,11 +60,7 @@ macro_rules! tera_response {
         }
     };
     ( auto_minify $cm:expr, $etag_if_none_match:expr, $name:expr, $data:expr ) => {
-        if cfg!(debug_assertions) {
-            tera_response!(disable_minify $cm, $etag_if_none_match, $name, $data)
-        } else {
-            tera_response!(enable_minify $cm, $etag_if_none_match, $name, $data)
-        }
+        $cm.build(&$etag_if_none_match, !cfg!(debug_assertions), $name, &$data)
     };
 }
 
@@ -70,20 +69,20 @@ macro_rules! tera_response {
 macro_rules! tera_resources_initializer {
     ( $($name:expr => $path:expr), * $(,)* ) => {
         {
-            $crate::TeraResponse::fairing(|tera| {
+            $crate::TeraResponse::fairing(|_tera| {
                 $crate::tera_resources_initialize!(
-                    tera
-                    $(, $name => $path)*
+                    _tera,
+                    $($name => $path),*
                 );
             })
         }
     };
     ( $capacity:expr; $($name:expr => $path:expr), * $(,)*  ) => {
         {
-            $crate::TeraResponse::fairing_cache(|tera| {
+            $crate::TeraResponse::fairing_cache(|_tera| {
                 $crate::tera_resources_initialize!(
-                    tera
-                    $(, $name => $path)*
+                    _tera,
+                    $($name => $path),*
                 );
 
                 $capacity

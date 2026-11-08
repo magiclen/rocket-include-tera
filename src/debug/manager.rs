@@ -30,31 +30,27 @@ impl TeraContextManager {
         name: S,
         context: V,
     ) -> TeraResponse {
-        self.tera
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .render(name.as_ref(), &Context::from_serialize(&context).unwrap())
-            .map(|html| {
-                let etag = compute_data_etag(html.as_bytes());
+        let html = self.render(name, context);
+        let etag = compute_data_etag(html.as_bytes());
 
-                if etag_if_none_match.weak_eq(&etag) {
-                    TeraResponse::not_modified()
-                } else {
-                    let html = if minify { html_minifier::minify(html).unwrap() } else { html };
+        if etag_if_none_match.weak_eq(&etag) {
+            return TeraResponse::not_modified_with_etag(&etag);
+        }
 
-                    TeraResponse::build_not_cache(html, etag)
-                }
-            })
-            .unwrap()
+        let html = if minify { html_minifier::minify(&html).unwrap_or(html) } else { html };
+
+        TeraResponse::build_not_cache(html, etag)
     }
 
     /// Render a template.
     #[inline]
     pub fn render<S: AsRef<str>, V: Serialize>(&self, name: S, context: V) -> String {
+        let context = Context::from_serialize(&context).unwrap();
+
         self.tera
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .render(name.as_ref(), &Context::from_serialize(&context).unwrap())
+            .render(name.as_ref(), &context)
             .unwrap()
     }
 }

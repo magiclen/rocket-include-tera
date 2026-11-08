@@ -12,12 +12,13 @@ use crate::EntityTag;
 enum TeraResponseInner {
     NotCache { content: String, etag: EntityTag<'static> },
     Cache { content: Arc<str>, etag: Arc<EntityTag<'static>> },
+    NotModified(Option<String>),
 }
 
 #[derive(Debug)]
 /// To respond HTML.
 pub struct TeraResponse {
-    inner: Option<TeraResponseInner>,
+    inner: TeraResponseInner,
 }
 
 impl TeraResponse {
@@ -27,10 +28,10 @@ impl TeraResponse {
         etag: EntityTag<'static>,
     ) -> TeraResponse {
         TeraResponse {
-            inner: Some(TeraResponseInner::NotCache {
+            inner: TeraResponseInner::NotCache {
                 content: content.into(),
                 etag,
-            }),
+            },
         }
     }
 
@@ -38,10 +39,10 @@ impl TeraResponse {
     #[inline]
     pub fn build_cache(content: Arc<str>, etag: Arc<EntityTag<'static>>) -> TeraResponse {
         TeraResponse {
-            inner: Some(TeraResponseInner::Cache {
+            inner: TeraResponseInner::Cache {
                 content,
                 etag,
-            }),
+            },
         }
     }
 
@@ -49,23 +50,37 @@ impl TeraResponse {
     #[inline]
     pub const fn not_modified() -> TeraResponse {
         TeraResponse {
-            inner: None
+            inner: TeraResponseInner::NotModified(None)
+        }
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    pub fn not_modified_with_etag(etag: &EntityTag<'_>) -> Self {
+        Self {
+            inner: TeraResponseInner::NotModified(Some(etag.to_string()))
         }
     }
 
     #[doc(hidden)]
     #[inline]
     pub fn into_html_and_etag(self) -> Option<(Arc<str>, Arc<EntityTag<'static>>)> {
+        self.into_cache_parts().ok()
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    pub fn into_cache_parts(self) -> Result<(Arc<str>, Arc<EntityTag<'static>>), Self> {
         match self.inner {
-            Some(TeraResponseInner::NotCache {
+            TeraResponseInner::NotCache {
                 content,
                 etag,
-            }) => Some((Arc::from(content), Arc::new(etag))),
-            Some(TeraResponseInner::Cache {
+            } => Ok((Arc::from(content), Arc::new(etag))),
+            TeraResponseInner::Cache {
                 content,
                 etag,
-            }) => Some((content, etag)),
-            None => None,
+            } => Ok((content, etag)),
+            TeraResponseInner::NotModified(_) => Err(self),
         }
     }
 }
@@ -86,27 +101,30 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for TeraResponse {
 
         let mut response = Response::build();
 
-        if let Some(inner) = self.inner {
-            response.raw_header("Content-Type", "text/html; charset=utf-8");
+        match self.inner {
+            TeraResponseInner::NotCache {
+                content,
+                etag,
+            } => {
+                response.raw_header("Content-Type", "text/html; charset=utf-8");
+                response.raw_header(EntityTag::HEADER_NAME, etag.to_string());
+                response.sized_body(content.len(), Cursor::new(content));
+            },
+            TeraResponseInner::Cache {
+                content,
+                etag,
+            } => {
+                response.raw_header("Content-Type", "text/html; charset=utf-8");
+                response.raw_header(EntityTag::HEADER_NAME, etag.to_string());
+                response.sized_body(content.len(), Cursor::new(SharedHtml(content)));
+            },
+            TeraResponseInner::NotModified(etag) => {
+                response.status(Status::NotModified);
 
-            match inner {
-                TeraResponseInner::NotCache {
-                    content,
-                    etag,
-                } => {
-                    response.raw_header("Etag", etag.to_string());
-                    response.sized_body(content.len(), Cursor::new(content));
-                },
-                TeraResponseInner::Cache {
-                    content,
-                    etag,
-                } => {
-                    response.raw_header("Etag", etag.to_string());
-                    response.sized_body(content.len(), Cursor::new(SharedHtml(content)));
-                },
-            }
-        } else {
-            response.status(Status::NotModified);
+                if let Some(etag) = etag {
+                    response.raw_header(EntityTag::HEADER_NAME, etag);
+                }
+            },
         }
 
         response.ok()

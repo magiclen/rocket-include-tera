@@ -44,9 +44,13 @@ impl Fairing for TeraResponseFairing {
         let cm = req
             .rocket()
             .state::<TeraContextManager>()
-            .expect("TeraContextManager registered in on_attach");
+            .expect("TeraContextManager registered in on_ignite");
 
-        cm.tera.lock().unwrap_or_else(PoisonError::into_inner).reload_if_needed().unwrap();
+        let result = cm.tera.lock().unwrap_or_else(PoisonError::into_inner).reload_if_needed();
+
+        if let Err(error) = result {
+            rocket::warn!("Failed to reload {FAIRING_NAME} templates: {error}");
+        }
     }
 }
 
@@ -68,6 +72,7 @@ impl TeraResponse {
     }
 
     /// Create the fairing of `TeraResponse` and set the cache capacity.
+    /// A cache capacity of zero disables caching.
     #[inline]
     pub fn fairing_cache<F>(f: F) -> impl Fairing
     where

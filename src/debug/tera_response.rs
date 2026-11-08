@@ -9,15 +9,15 @@ use rocket::{
 use crate::{EntityTag, EtagIfNoneMatch};
 
 #[derive(Debug)]
-struct TeraResponseInner {
-    content: String,
-    etag:    EntityTag<'static>,
+enum TeraResponseInner {
+    Html { content: String, etag: EntityTag<'static> },
+    NotModified(Option<String>),
 }
 
 #[derive(Debug)]
 /// To respond HTML.
 pub struct TeraResponse {
-    inner: Option<TeraResponseInner>,
+    inner: TeraResponseInner,
 }
 
 impl TeraResponse {
@@ -27,10 +27,10 @@ impl TeraResponse {
         etag: EntityTag<'static>,
     ) -> TeraResponse {
         TeraResponse {
-            inner: Some(TeraResponseInner {
+            inner: TeraResponseInner::Html {
                 content: content.into(),
                 etag,
-            }),
+            },
         }
     }
 
@@ -38,14 +38,32 @@ impl TeraResponse {
     #[inline]
     pub const fn not_modified() -> TeraResponse {
         TeraResponse {
-            inner: None
+            inner: TeraResponseInner::NotModified(None)
+        }
+    }
+
+    #[inline]
+    pub(crate) fn not_modified_with_etag(etag: &EntityTag<'_>) -> Self {
+        Self {
+            inner: TeraResponseInner::NotModified(Some(etag.to_string()))
+        }
+    }
+
+    #[doc(hidden)]
+    #[inline]
+    pub fn check_etag(self, etag_if_none_match: &EtagIfNoneMatch<'_>) -> Self {
+        match &self.inner {
+            TeraResponseInner::Html {
+                etag, ..
+            } if etag_if_none_match.weak_eq(etag) => Self::not_modified_with_etag(etag),
+            _ => self,
         }
     }
 
     #[doc(hidden)]
     #[inline]
     pub fn weak_eq(&self, etag_if_none_match: &EtagIfNoneMatch<'_>) -> bool {
-        self.inner.as_ref().is_some_and(|inner| etag_if_none_match.weak_eq(&inner.etag))
+        matches!(&self.inner, TeraResponseInner::Html { etag, .. } if etag_if_none_match.weak_eq(etag))
     }
 }
 
@@ -54,13 +72,22 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for TeraResponse {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'o> {
         let mut response = Response::build();
 
-        if let Some(inner) = self.inner {
-            response.raw_header("Content-Type", "text/html; charset=utf-8");
-            response.raw_header("Etag", inner.etag.to_string());
+        match self.inner {
+            TeraResponseInner::Html {
+                content,
+                etag,
+            } => {
+                response.raw_header("Content-Type", "text/html; charset=utf-8");
+                response.raw_header(EntityTag::HEADER_NAME, etag.to_string());
+                response.sized_body(content.len(), Cursor::new(content));
+            },
+            TeraResponseInner::NotModified(etag) => {
+                response.status(Status::NotModified);
 
-            response.sized_body(inner.content.len(), Cursor::new(inner.content));
-        } else {
-            response.status(Status::NotModified);
+                if let Some(etag) = etag {
+                    response.raw_header(EntityTag::HEADER_NAME, etag);
+                }
+            },
         }
 
         response.ok()
