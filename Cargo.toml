@@ -21,7 +21,7 @@ serde = "1.0.184"
 manifest-dir-macros = { version = "0.1.20", features = ["tuple"] }
 educe = { version = "0.8.2", default-features = false, features = ["Debug"] }
 
-rocket-etag-if-none-match = "0.5"
+rocket-etag-if-none-match = "0.5.1"
 # `EntityTag` comes from `rocket-etag-if-none-match`, which does not enable `weak-hasher` itself. This direct dependency turns that feature on through feature unification, so it has to keep resolving to the very same version of `entity-tag` that `rocket-etag-if-none-match` depends on.
 entity-tag = { version = "0.2.2", features = ["weak-hasher"] }
 
